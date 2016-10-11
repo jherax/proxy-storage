@@ -14,7 +14,8 @@ _@type_ `Object`. Defines the basic [Web Storage](https://developer.mozilla.org/
 
 - **`setItem`**`(key, value)`: stores a `value` given a `key` name.
 - **`getItem`**`(key)`: retrieves a _value_ by its `key` name.
-- **`removeItem`**`(key)`: deletes a _value_ from the storage by its `key` name.
+- **`removeItem`**`(key)`: deletes a key from the storage.
+- **`clear`**`()`: removes all keys from the storage.
 
 ##proxy
 _@type_ `Object`. Defines a proxy object for the built-in storage mechanisms. It contains the following objects:

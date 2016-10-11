@@ -13,7 +13,7 @@
 const proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
-  cookie: cookieStorage()
+  cookie: cookieStorage(),
 };
 
 /**
@@ -58,6 +58,9 @@ const webStorage = {
   },
   removeItem(key) {
     currentStorage.removeItem(key);
+  },
+  clear() {
+    currentStorage.clear();
   }
 };
 
@@ -97,7 +100,7 @@ const $cookie = {
  * Manages the creation/read/remove cookies.
  * Implements Web Storage interface methods.
  *
- * @type {Object}
+ * @return {Object}
  */
 function cookieStorage() {
   const api = {
@@ -115,12 +118,24 @@ function cookieStorage() {
     getItem(key) {
       const nameEQ = `${key}=`;
       let cookie = $cookie.get().split(';').find(findCookie, nameEQ);
-      if (cookie) return cookie.substring(nameEQ.length, cookie.length);
+      if (cookie) return cookie.trim().substring(nameEQ.length, cookie.length);
       return null;
     },
 
     removeItem(key) {
-      this.setItem(key, '', -1);
+      api.setItem(key, '', -1);
+    },
+
+    clear() {
+      let eq = '=', indexEQ, key;
+      $cookie.get().split(';').forEach((cookie) => {
+        indexEQ = cookie.indexOf(eq);
+        if (indexEQ > -1) {
+          key = cookie.substring(0, indexEQ);
+          // prevent leading spaces before the key
+          api.removeItem(key.trim());
+        }
+      });
     }
   };
   return api;
@@ -132,7 +147,8 @@ function cookieStorage() {
  * @return {String}
  */
 function findCookie(cookie) {
-  var nameEQ = this.toString();
+  let nameEQ = this.toString();
+  // prevent leading spaces before the key
   return cookie.trim().indexOf(nameEQ) === 0;
 }
 
