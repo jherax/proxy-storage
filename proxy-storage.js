@@ -14,6 +14,7 @@ const proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
   cookie: cookieStorage(),
+  memory: memoryStorage()
 };
 
 /**
@@ -26,7 +27,8 @@ const proxy = {
 const isAvaliable = {
   localStorage: false,
   sessionStorage: false,
-  cookie: false
+  cookie: false,
+  memory: true
 };
 
 /**
@@ -49,20 +51,34 @@ let currentStorageName = null;
  */
 const webStorage = {
   setItem(key, value) {
+    checkEmpty(key);
     value = JSON.stringify(value);
     currentStorage.setItem(key, value);
   },
   getItem(key) {
+    checkEmpty(key);
     let value = currentStorage.getItem(key);
     return JSON.parse(value);
   },
   removeItem(key) {
+    checkEmpty(key);
     currentStorage.removeItem(key);
   },
   clear() {
     currentStorage.clear();
   }
 };
+
+
+/**
+ * Validates if the key value is not empty.
+ * (null, undefined and empty string)
+ * @param  {String} key
+ */
+function checkEmpty(key) {
+  if (key == null || key === '')
+    throw new Error('Key can not be empty');
+}
 
 /**
  * @public
@@ -142,14 +158,54 @@ function cookieStorage() {
 }
 
 /**
- * Callback running for each cookie in the array.
+ * Callback that finds an element in the array.
  * @param  {String} cookie: key/value
- * @return {String}
+ * @return {Boolean}
  */
 function findCookie(cookie) {
   let nameEQ = this.toString();
   // prevent leading spaces before the key
   return cookie.trim().indexOf(nameEQ) === 0;
+}
+
+/**
+ * Callback that finds an element in the array.
+ * @param  {Object} item: {key, value}
+ * @return {Boolean}
+ */
+function findItem(item) {
+  let key = this.toString();
+  return item.key === key;
+}
+
+/**
+ * Manages the creation/read/remove data in memory.
+ * Implements Web Storage interface methods.
+ *
+ * @return {Object}
+ */
+function memoryStorage() {
+  const hashtable = [/*{key,value}*/];
+  const api = {
+    setItem(key, value) {
+      let item = hashtable.find(findItem, key);
+      if (item) item.value = value;
+      else hashtable.push({ key, value });
+    },
+    getItem(key) {
+      let item = hashtable.find(findItem, key);
+      if (item) return item.value;
+      return null;
+    },
+    removeItem(key) {
+      let index = hashtable.findIndex(findItem, key);
+      if (index > -1) hashtable.splice(index, 1);
+    },
+    clear() {
+      hashtable.length = 0;
+    }
+  };
+  return api;
 }
 
 /**
@@ -189,10 +245,8 @@ function init() {
   isAvaliable.localStorage = storageAvailable('localStorage');
   isAvaliable.sessionStorage = storageAvailable('sessionStorage');
   isAvaliable.cookie = storageAvailable('cookie');
-  // sets the default storage mechanism
-  if (!Object.keys(isAvaliable).some(isStorageAvaliable)) {
-    // TODO: implement an internal session storage as fallback
-  }
+  // sets the default storage mechanism available
+  Object.keys(isAvaliable).some(isStorageAvaliable);
 }
 
 init();
