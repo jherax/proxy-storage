@@ -4,8 +4,9 @@
  * @public
  *
  * Proxy for Web Storage and Cookies.
+ * All APIs implement the Web Storage interface.
  *
- * Reference:
+ * @Reference
  * https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API
  *
  * @type {Object}
@@ -41,10 +42,10 @@ let currentStorageName = null;
 /**
  * @public
  *
- * WebStorage interface to export (basic API)
- * It saves the Object values as JSON.
+ * Web Storage interface to export (basic API)
+ * It saves all values as JSON.
  *
- * Reference:
+ * @Reference
  * https://developer.mozilla.org/en-US/docs/Web/API/Storage
  *
  * @type {Object}
@@ -69,23 +70,22 @@ const webStorage = {
   }
 };
 
-
 /**
- * Validates if the key value is not empty.
- * (null, undefined and empty string)
+ * Validates if the key is not empty.
+ * (null, undefined or empty string)
  * @param  {String} key
  */
 function checkEmpty(key) {
   if (key == null || key === '')
-    throw new Error('Key can not be empty');
+    throw new Error('Key provided can not be empty');
 }
 
 /**
  * @public
  *
- * Get/Set the storage type to use by default.
+ * Get/Set the storage mechanism to use by default.
  *
- * @param {String} storageType: it can be "localStorage", "sessionStorage", or "cookie"
+ * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookie", or "memory"
  */
 const configStorage = {
   get() {
@@ -100,9 +100,9 @@ const configStorage = {
 };
 
 /**
- * Alias for cookie object.
+ * Alias for the default cookie storage associated with the current document.
  *
- * Reference:
+ * @Reference
  * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
  *
  * @type {Object}
@@ -113,7 +113,7 @@ const $cookie = {
 };
 
 /**
- * Manages the creation/read/remove cookies.
+ * Manages actions for creation/reading/deleting cookies.
  * Implements Web Storage interface methods.
  *
  * @return {Object}
@@ -128,14 +128,19 @@ function cookieStorage() {
         date.setTime(date.getTime() + days);
         expires = `; expires=${date.toUTCString()}`;
       }
-      $cookie.set(`${key}=${value}${expires}; path=${path}`);
+      $cookie.set(`${key}=${encodeURIComponent(value)}${expires}; path=${path}`);
     },
 
     getItem(key) {
+      let value = null;
       const nameEQ = `${key}=`;
       let cookie = $cookie.get().split(';').find(findCookie, nameEQ);
-      if (cookie) return cookie.trim().substring(nameEQ.length, cookie.length);
-      return null;
+      if (cookie) {
+        // prevent leading spaces before the key name
+        value = cookie.trim().substring(nameEQ.length, cookie.length);
+        value = decodeURIComponent(value);
+      }
+      return value;
     },
 
     removeItem(key) {
@@ -159,7 +164,7 @@ function cookieStorage() {
 
 /**
  * Callback that finds an element in the array.
- * @param  {String} cookie: key/value
+ * @param  {String} cookie: key=value
  * @return {Boolean}
  */
 function findCookie(cookie) {
@@ -179,7 +184,7 @@ function findItem(item) {
 }
 
 /**
- * Manages the creation/read/remove data in memory.
+ * Manages actions for creation/reading/deleting data in memory.
  * Implements Web Storage interface methods.
  *
  * @return {Object}
@@ -209,8 +214,8 @@ function memoryStorage() {
 }
 
 /**
- * Checks whether the storage type is available.
- * @param  {String} storageType: it can be "localStorage", "sessionStorage", or "cookie"
+ * Checks whether a storage mechanism is available.
+ * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookie", or "memory"
  * @return {Boolean}
  */
 function storageAvailable(storageType) {
@@ -227,8 +232,8 @@ function storageAvailable(storageType) {
 }
 
 /**
- * Sets the default storage mechanism.
- * @param  {String} storageType: it can be "localStorage", "sessionStorage", or "cookie"
+ * Sets the default storage mechanism available.
+ * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookie", or "memory"
  * @return {Boolean}
  */
 function isStorageAvaliable(storageType) {
