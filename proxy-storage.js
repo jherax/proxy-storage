@@ -77,7 +77,7 @@ const webStorage = {
  */
 function checkEmpty(key) {
   if (key == null || key === '')
-    throw new Error('Key provided can not be empty');
+    throw new Error('The key provided can not be empty');
 }
 
 /**
@@ -186,16 +186,18 @@ function findItem(item) {
 /**
  * Manages actions for creation/reading/deleting data in memory.
  * Implements Web Storage interface methods.
+ * It also adds a hack to persist the store as a session in the current window.
  *
  * @return {Object}
  */
 function memoryStorage() {
-  const hashtable = [/*{key,value}*/];
+  const hashtable = getStoreFromWindow();
   const api = {
     setItem(key, value) {
       let item = hashtable.find(findItem, key);
       if (item) item.value = value;
       else hashtable.push({ key, value });
+      setStoreToWindow(hashtable);
     },
     getItem(key) {
       let item = hashtable.find(findItem, key);
@@ -205,12 +207,35 @@ function memoryStorage() {
     removeItem(key) {
       let index = hashtable.findIndex(findItem, key);
       if (index > -1) hashtable.splice(index, 1);
+      setStoreToWindow(hashtable);
     },
     clear() {
       hashtable.length = 0;
+      setStoreToWindow(hashtable);
     }
   };
   return api;
+}
+
+/**
+ * Gets the hashtable store from the current window.
+ * @return {Array}
+ */
+function getStoreFromWindow() {
+  try {
+    let store = JSON.parse(window.self.name);
+    if (store instanceof Array) return store;
+  }
+  catch(e) {}
+  return [/*{key,value}*/];
+}
+
+/**
+ * Saves the hashtable store in the current window.
+ */
+function setStoreToWindow(hashtable) {
+  let store = JSON.stringify(hashtable);
+  window.self.name = store;
 }
 
 /**
