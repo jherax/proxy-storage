@@ -1,4 +1,4 @@
-'use strict';
+/* eslint-disable no-use-before-define, one-var */
 
 /**
  * @public
@@ -15,7 +15,7 @@ const proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
   cookie: cookieStorage(),
-  memory: memoryStorage()
+  memory: memoryStorage(),
 };
 
 /**
@@ -29,7 +29,7 @@ const isAvaliable = {
   localStorage: false,
   sessionStorage: false,
   cookie: false,
-  memory: true
+  memory: true,
 };
 
 /**
@@ -58,7 +58,7 @@ const webStorage = {
   },
   getItem(key) {
     checkEmpty(key);
-    let value = currentStorage.getItem(key);
+    const value = currentStorage.getItem(key);
     return JSON.parse(value);
   },
   removeItem(key) {
@@ -67,7 +67,7 @@ const webStorage = {
   },
   clear() {
     currentStorage.clear();
-  }
+  },
 };
 
 /**
@@ -76,8 +76,9 @@ const webStorage = {
  * @param  {String} key
  */
 function checkEmpty(key) {
-  if (key == null || key === '')
+  if (key == null || key === '') { // eslint-disable-line
     throw new Error('The key provided can not be empty');
+  }
 }
 
 /**
@@ -92,11 +93,12 @@ const configStorage = {
     return currentStorageName;
   },
   set(storageType) {
-    if (!proxy.hasOwnProperty(storageType))
+    if (!proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" does not exist`);
+    }
     currentStorage = proxy[storageType];
     currentStorageName = storageType;
-  }
+  },
 };
 
 /**
@@ -109,7 +111,7 @@ const configStorage = {
  */
 const $cookie = {
   get: () => document.cookie,
-  set: (value) => document.cookie = value
+  set: (value) => { document.cookie = value },
 };
 
 /**
@@ -134,7 +136,7 @@ function cookieStorage() {
     getItem(key) {
       let value = null;
       const nameEQ = `${key}=`;
-      let cookie = $cookie.get().split(';').find(findCookie, nameEQ);
+      const cookie = $cookie.get().split(';').find(findCookie, nameEQ);
       if (cookie) {
         // prevent leading spaces before the key name
         value = cookie.trim().substring(nameEQ.length, cookie.length);
@@ -148,7 +150,8 @@ function cookieStorage() {
     },
 
     clear() {
-      let eq = '=', indexEQ, key;
+      const eq = '=';
+      let indexEQ, key;
       $cookie.get().split(';').forEach((cookie) => {
         indexEQ = cookie.indexOf(eq);
         if (indexEQ > -1) {
@@ -157,7 +160,7 @@ function cookieStorage() {
           api.removeItem(key.trim());
         }
       });
-    }
+    },
   };
   return api;
 }
@@ -168,7 +171,7 @@ function cookieStorage() {
  * @return {Boolean}
  */
 function findCookie(cookie) {
-  let nameEQ = this.toString();
+  const nameEQ = this.toString();
   // prevent leading spaces before the key
   return cookie.trim().indexOf(nameEQ) === 0;
 }
@@ -179,7 +182,7 @@ function findCookie(cookie) {
  * @return {Boolean}
  */
 function findItem(item) {
-  let key = this.toString();
+  const key = this.toString();
   return item.key === key;
 }
 
@@ -194,25 +197,25 @@ function memoryStorage() {
   const hashtable = getStoreFromWindow();
   const api = {
     setItem(key, value) {
-      let item = hashtable.find(findItem, key);
+      const item = hashtable.find(findItem, key);
       if (item) item.value = value;
       else hashtable.push({ key, value });
       setStoreToWindow(hashtable);
     },
     getItem(key) {
-      let item = hashtable.find(findItem, key);
+      const item = hashtable.find(findItem, key);
       if (item) return item.value;
       return null;
     },
     removeItem(key) {
-      let index = hashtable.findIndex(findItem, key);
+      const index = hashtable.findIndex(findItem, key);
       if (index > -1) hashtable.splice(index, 1);
       setStoreToWindow(hashtable);
     },
     clear() {
       hashtable.length = 0;
       setStoreToWindow(hashtable);
-    }
+    },
   };
   return api;
 }
@@ -223,18 +226,17 @@ function memoryStorage() {
  */
 function getStoreFromWindow() {
   try {
-    let store = JSON.parse(window.self.name);
+    const store = JSON.parse(window.self.name);
     if (store instanceof Array) return store;
-  }
-  catch(e) {}
-  return [/*{key,value}*/];
+  } catch (e) {} // eslint-disable-line
+  return [/* {key,value} */];
 }
 
 /**
  * Saves the hashtable store in the current window.
  */
 function setStoreToWindow(hashtable) {
-  let store = JSON.stringify(hashtable);
+  const store = JSON.stringify(hashtable);
   window.self.name = store;
 }
 
@@ -244,14 +246,13 @@ function setStoreToWindow(hashtable) {
  * @return {Boolean}
  */
 function storageAvailable(storageType) {
-  let storage = proxy[storageType];
-  let data = '__proxy-storage__';
+  const storage = proxy[storageType];
+  const data = '__proxy-storage__';
   try {
     storage.setItem(data, data);
     storage.removeItem(data);
     return true;
-  }
-  catch(e) {
+  } catch (e) {
     return false;
   }
 }
