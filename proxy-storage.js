@@ -14,8 +14,8 @@
 const proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
-  cookie: cookieStorage(),
-  memory: memoryStorage(),
+  cookieStorage: cookieStorage(),
+  memoryStorage: memoryStorage(),
 };
 
 /**
@@ -28,8 +28,8 @@ const proxy = {
 const isAvaliable = {
   localStorage: false,
   sessionStorage: false,
-  cookie: false,
-  memory: true,
+  cookieStorage: false,
+  memoryStorage: true,
 };
 
 /**
@@ -86,7 +86,7 @@ function checkEmpty(key) {
  *
  * Get/Set the storage mechanism to use by default.
  *
- * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookie", or "memory"
+ * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
  */
 const configStorage = {
   get() {
@@ -242,7 +242,7 @@ function setStoreToWindow(hashtable) {
 
 /**
  * Checks whether a storage mechanism is available.
- * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookie", or "memory"
+ * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
  * @return {Boolean}
  */
 function storageAvailable(storageType) {
@@ -259,7 +259,7 @@ function storageAvailable(storageType) {
 
 /**
  * Sets the default storage mechanism available.
- * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookie", or "memory"
+ * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
  * @return {Boolean}
  */
 function isStorageAvaliable(storageType) {
@@ -275,7 +275,7 @@ function isStorageAvaliable(storageType) {
 function init() {
   isAvaliable.localStorage = storageAvailable('localStorage');
   isAvaliable.sessionStorage = storageAvailable('sessionStorage');
-  isAvaliable.cookie = storageAvailable('cookie');
+  isAvaliable.cookieStorage = storageAvailable('cookieStorage');
   // sets the default storage mechanism available
   Object.keys(isAvaliable).some(isStorageAvaliable);
 }
