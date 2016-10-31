@@ -16,6 +16,9 @@
  * https://github.com/jherax/proxy-storage.git
  */
 
+// If you want to support all ES6 features, uncomment the next line
+// import 'babel-polyfill';
+
 /**
  * @private
  *

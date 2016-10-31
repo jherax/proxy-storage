@@ -1,0 +1,36 @@
+{
+  "name": "proxy-storage",
+  "description": "Storage mechanism that implements the Web Storage interface",
+  "version": "0.1.0",
+  "main": "index.js",
+  "author": "David Rivera <jherax@gmail.com>",
+  "repository": {
+    "url": "git@github.com:jherax/proxy-storage.git",
+    "type": "git"
+  },
+  "bugs": {
+    "url": "https://github.com/jherax/proxy-storage/issues"
+  },
+  "scripts": {
+    "build": "webpack"
+  },
+  "engines": {
+    "node": ">=6.0",
+    "npm": ">=3.3 <4"
+  },
+  "license": "MIT",
+  "devDependencies": {
+    "babel-core": "^6.18.0",
+    "babel-eslint": "^7.1.0",
+    "babel-loader": "^6.2.7",
+    "babel-polyfill": "^6.16.0",
+    "babel-preset-es2015": "^6.18.0",
+    "eslint": "^3.9.0",
+    "webpack": "^1.13.3"
+  },
+  "babel": {
+    "presets": [
+      "es2015"
+    ]
+  }
+}

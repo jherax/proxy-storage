@@ -1,0 +1,22 @@
+{
+  "extends": [
+    "eslint:recommended"
+  ],
+  "root": true,
+  "env": {
+    "es6": true,
+    "node": true,
+    "browser": true
+  },
+  "globals": {},
+  "parser": "babel-eslint",
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "impliedStrict": true,
+      "experimentalObjectRestSpread": true
+    }
+  },
+  "rules": {}
+}
