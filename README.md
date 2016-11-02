@@ -187,6 +187,8 @@ function isSafariInPrivateMode(flags) {
 }
 ```
 
+TODO: Add documentation to use as CommonJS Module or Globals Module
+
 --
 
 ## Versioning
