@@ -1,9 +1,18 @@
 {
   "name": "proxy-storage",
   "description": "Storage mechanism that implements the Web Storage interface",
-  "version": "0.1.1",
-  "main": "index.js",
+  "version": "0.1.0",
   "author": "David Rivera <jherax@gmail.com>",
+  "src": "src/proxy-storage.js",
+  "main": "dist/proxy-storage.js",
+  "keywords": [
+    "javascript",
+    "storage",
+    "web storage",
+    "sessionStorage",
+    "localStorage",
+    "cookie"
+  ],
   "repository": {
     "url": "git@github.com:jherax/proxy-storage.git",
     "type": "git"
