@@ -1,10 +1,19 @@
 # Proxy Storage
 
-This library is intended to use as a proxy that implements a basic [Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage) interface, which is very useful to deal with the lack of compatibility between [document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) and [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage), [sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+This library is intended to use as a proxy that implements a basic 
+[Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage) interface, 
+which is very useful to deal with the lack of compatibility between 
+[document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) and 
+[localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage), 
+[sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 
-It also provides a fallback that stores the data in memory when all of above mechanisms are not available, for example in some browsers using private navigation. The behavior of the _`memoryStorage`_ is similar to [_sessionStorage_](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+It also provides a fallback that stores the data in memory when all of above mechanisms are not available, 
+for example in some browsers using private navigation. The behavior of the _`memoryStorage`_ is similar to 
+[_sessionStorage_](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 
-The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store `Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, `sessionStorage` and `cookie` storages.
+The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store 
+`Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
+`sessionStorage` and `cookie` storages.
 
 ## Getting started
 
@@ -45,21 +54,81 @@ And finally execute the webpack task:
 $ yarn run build
 ```
 
+This command will use [Babel](https://babeljs.io/) to transpile the ES2015 (ES6) Module in `src/` folder to an UMD ES5 Module in `dest/`  
+and also it will generate the minified version and source maps.
+
+## Including the library
+
+`proxy-storage` can be included directly from a CDN in your page:
+
+```html
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/<version>/dist/proxy-storage.min.js"></script>
+``` 
+
+In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
+
+```javascript
+// get the default storage mechanism
+var storage = proxyStorage.default;
+
+// or get the constructor
+var cookieStore = new proxyStorage.WebStorage('cookieStorage');
+```
+
+As `proxy-storage` is built as an [UMD](http://davidbcalhoun.com/2014/what-is-amd-commonjs-and-umd/) 
+(Universal Module Definition), it can be included from a module loader as AMD, CommonJS, or ES2015 Export.
+
+### CommonJS
+
+```javascript
+// gets the default storage mechanism
+var storage = require('proxy-storage').default;
+
+// or get the constructor
+var WebStorage = require('proxy-storage').WebStorage;
+var cookieStore = new WebStorage('cookieStorage');
+```
+
+### ES2015 Export
+
+```javascript
+// gets the default storage mechanism
+import storage from 'proxy-storage';
+
+// or get some API members
+import storage, { WebStorage, configStorage } from 'proxy-storage';
+```
+
+### AMD
+
+```javascript
+define(['proxy-storage'], function(WebStorage){
+    // here, the WebStorage constructor is available
+    var sessionStore = new WebStorage('sessionStorage');
+});
+```
+
 # API
 
-The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store `Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, `sessionStorage` and `cookie` storages.
+The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store 
+`Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
+`sessionStorage` and `cookie` storages.
 
-This library has been written as a **ES6 module** and the exported API contains the following members:
+This library has been written as a **ES2015 module** and the exported API contains the following members:
 
 ## storage
-_@type_ `Object`. This is the _(default module)_ and is an instance of [`WebStorage`](#webstorage). It saves and retrieves the data internally as JSON, which allow not only store **Primitive** values but also **Object** values. It contains the following methods:
+
+_@type_ `Object`. This is the _(default module)_ and is an instance of [`WebStorage`](#webstorage). 
+It saves and retrieves the data internally as JSON, which allow not only store **Primitive** values 
+but also **Object** values. It contains the following methods:
 
 - **`setItem`**`(key, value)`: stores a `value` given a `key` name.
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
 - **`removeItem`**`(key)`: deletes a key from the storage.
 - **`clear`**`()`: removes all keys from the storage.
 
-By default this object handles and adapter for the first storage mechanism available. The availability is determined in the following order:
+By default this object handles and adapter for the first storage mechanism available. 
+The availability is determined in the following order:
 
 1. **`localStorage`**: proxy for [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) object.
 2. **`sessionStorage`**: proxy for [sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) object.
@@ -91,7 +160,10 @@ data = storage.getItem('o-really');
 ```
 
 ## WebStorage
-_@type_ `Class`. This constructor implements the Web Storage interface. You can create new instances of this `class` which will allow you manage different storage mechanisms. It is very useful when you need to store data in more than one storage mechanism at the same time.
+
+_@type_ `Class`. This constructor implements the Web Storage interface. You can create new instances 
+of this `class` which will allow you manage different storage mechanisms. It is very useful when you need 
+to store data in more than one storage mechanism at the same time.
 
 #### Example
 
@@ -124,10 +196,12 @@ function clearDataFromStorage() {
 ```
 
 ## configStorage
+
 _@type_ `Object`. Get and set the storage mechanism to use by default. It contains the following methods:
 
 - **`get`**`()`: returns a `String` with the name of the current storage mechanism.
-- **`set`**`(storageType)`: sets the current storage mechanism. `storageType` must be one of the following strings: `"localStorage"`, `"sessionStorage"`, `"cookieStorage"`, or `"memoryStorage"`
+- **`set`**`(storageType)`: sets the current storage mechanism. `storageType` must be one of the 
+following strings: `"localStorage"`, `"sessionStorage"`, `"cookieStorage"`, or `"memoryStorage"`
 
 #### Example
 
@@ -149,6 +223,7 @@ storage.setItem('currentStorage', storageName);
 ```
 
 ## isAvaliable
+
 _@type_ `Object`. Determines which storage mechanisms are available. It contains the following flags:
 
 - **`localStorage`**: is set to `true` if the local storage is available.
@@ -187,10 +262,6 @@ function isSafariInPrivateMode(flags) {
 }
 ```
 
-TODO: Add documentation to use as CommonJS Module or Globals Module
-
---
-
 ## Versioning
 
 This projects adopts the [Semantic Versioning](http://semver.org/) (SemVer) guidelines:
@@ -217,4 +288,6 @@ Details changes for each release are documented [here](CHANGELOG.md).
 
 ## License
 
-This project has been released under the [MIT](https://opensource.org/licenses/MIT) license. This license applies ONLY to the source of this repository and does not extend to any other distribution, or any other 3rd party libraries used in a repository. See [LICENSE](LICENSE) file for more information.
+This project has been released under the [MIT](https://opensource.org/licenses/MIT) license. 
+This license applies ONLY to the source of this repository and does not extend to any other distribution, 
+or any other 3rd party libraries used in a repository. See [LICENSE](LICENSE) file for more information.
