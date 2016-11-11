@@ -1,3 +1,9 @@
+# 0.3.0
+
+### Features
+
+1. Added the static method `WebStorage.interceptors()`
+
 # 0.2.0
 
 ### Improvements

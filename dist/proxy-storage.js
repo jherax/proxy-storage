@@ -96,12 +96,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * @type {object}
 	 */
-	var proxy = {
+	var _proxy = {
 	  localStorage: window.localStorage,
 	  sessionStorage: window.sessionStorage,
 	  cookieStorage: cookieStorage(),
 	  memoryStorage: memoryStorage()
 	};
+
+	/**
+	 * @private
+	 *
+	 * Stores the interceptors for WebStorage methods
+	 *
+	 * @type {object}
+	 */
+	var _interceptors = {
+	  setItem: [],
+	  getItem: [],
+	  removeItem: [],
+	  clear: []
+	};
+
+	/**
+	 * Executes the interceptors of a WebStorage method
+	 *
+	 * @param  {string} command: name of the method to intercept
+	 * @return {void}
+	 */
+	function executeInterceptors(command) {
+	  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+	    args[_key - 1] = arguments[_key];
+	  }
+
+	  _interceptors[command].forEach(function (action) {
+	    return action.apply(undefined, args);
+	  });
+	}
 
 	/**
 	 * @private
@@ -115,6 +145,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (key == null || key === '') {
 	    throw new Error('The key provided can not be empty');
 	  }
+	}
+
+	/**
+	 * @private
+	 *
+	 * Creates a non-enumerable read-only property.
+	 *
+	 * @param  {object} obj: the object to add the property
+	 * @param  {string} name: the name of the property
+	 * @param  {any} value: the value of the property
+	 * @return {void}
+	 */
+	function setProperty(obj, name, value) {
+	  Object.defineProperty(obj, name, {
+	    configurable: false,
+	    enumerable: false,
+	    writable: false,
+	    value: value
+	  });
 	}
 
 	/**
@@ -140,15 +189,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	  function WebStorage(storageType) {
 	    _classCallCheck(this, WebStorage);
 
-	    if (!proxy.hasOwnProperty(storageType)) {
+	    if (!_proxy.hasOwnProperty(storageType)) {
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
-	    Object.defineProperty(this, '__storage', {
-	      configurable: false,
-	      enumerable: false,
-	      writable: false,
-	      value: proxy[storageType]
-	    });
+	    setProperty(this, '__storage', _proxy[storageType]);
 	  }
 	  /**
 	   * Stores a value given a key name.
@@ -165,6 +209,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setItem',
 	    value: function setItem(key, value) {
 	      checkEmpty(key);
+	      executeInterceptors('setItem', key, value);
 	      value = JSON.stringify(value);
 	      this.__storage.setItem(key, value);
 	    }
@@ -181,8 +226,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'getItem',
 	    value: function getItem(key) {
 	      checkEmpty(key);
-	      var value = this.__storage.getItem(key);
-	      return JSON.parse(value);
+	      executeInterceptors('getItem', key);
+	      var value = JSON.parse(this.__storage.getItem(key));
+	      return value;
 	    }
 	    /**
 	     * Deletes a key from the storage.
@@ -197,6 +243,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'removeItem',
 	    value: function removeItem(key) {
 	      checkEmpty(key);
+	      executeInterceptors('removeItem', key);
 	      this.__storage.removeItem(key);
 	    }
 	    /**
@@ -210,7 +257,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'clear',
 	    value: function clear() {
+	      executeInterceptors('clear');
 	      this.__storage.clear();
+	    }
+	    /**
+	     * Adds an interceptor to a WebStorage method
+	     *
+	     * @param  {string} command: name of the API method to intercept
+	     * @param  {function} action: callback executed when the API method is called
+	     * @return {void}
+	     *
+	     * @memberOf WebStorage
+	     */
+
+	  }], [{
+	    key: 'interceptors',
+	    value: function interceptors(command, action) {
+	      if (command in _interceptors && typeof action === 'function') _interceptors[command].push(action);
 	    }
 	  }]);
 
@@ -247,7 +310,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Current storage type
 	 * @type {string}
 	 */
-	var currentStorageName = null;
+	var _currentStorageName = null;
 
 	/**
 	 * @public
@@ -257,7 +320,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var configStorage = {
 	  get: function get() {
-	    return currentStorageName;
+	    return _currentStorageName;
 	  },
 
 
@@ -267,11 +330,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @return {void}
 	   */
 	  set: function set(storageType) {
-	    if (!proxy.hasOwnProperty(storageType)) {
+	    if (!_proxy.hasOwnProperty(storageType)) {
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
 	    exports.default = storage = new WebStorage(storageType);
-	    currentStorageName = storageType;
+	    _currentStorageName = storageType;
 	  }
 	};
 
@@ -441,7 +504,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {boolean}
 	 */
 	function isStorageAvailable(storageType) {
-	  var storageObj = proxy[storageType];
+	  var storageObj = _proxy[storageType];
 	  var data = '__proxy-storage__';
 	  try {
 	    storageObj.setItem(data, data);

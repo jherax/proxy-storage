@@ -133,7 +133,8 @@ The availability is determined in the following order:
 1. **`localStorage`**: proxy for [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) object.
 2. **`sessionStorage`**: proxy for [sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) object.
 3. **`cookieStorage`**: proxy for [document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) object that implements Web Storage.
-4. **`memoryStorage`**: internal storage mechanism that can be used as a fallback when none of the above mechanisms are available. The behavior of _memoryStorage_ is similar to _sessionStorage_.
+4. **`memoryStorage`**: internal storage mechanism that can be used as a fallback when none of the above mechanisms are available. 
+The behavior of _memoryStorage_ is similar to _sessionStorage_.
 
 #### Example
 
@@ -193,6 +194,33 @@ function clearDataFromStorage() {
   new WebStorage('sessionStorage').clear();
   new WebStorage('cookieStorage').clear();
 }
+```
+
+### Static Methods
+
+**`WebStorage`** provides the static method `interceptors` which allows us to register callbacks that runs when an API method is invoked.
+It is very useful when you need to perform some additional actions when accessing the `WebStorage` methods.
+
+- **`WebStorage.interceptors`**`(command, action)`: adds an interceptor to a `WebStorage` method. 
+  - `command` `{string}`. The name of the API method to intercept. It can be `setItem`, `getItem`, `removeItem`, `clear`
+  - `action` `{function}`. Callback executed when the API method is called.
+
+#### Example
+
+```javascript
+import storage, { WebStorage, isAvaliable } from 'proxy-storage';
+
+// detect if we are in a private navigation session
+// and we have no access to default storage mechanisms
+if (!isAvaliable.localStorage && !isAvaliable.cookieStorage) {
+  WebStorage.interceptors('setItem', (key, value) => console.log(`setItem: ${key}: ${value}`));
+  WebStorage.interceptors('getItem', (key) => console.log(`getItem: ${key}`));
+  WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
+}
+
+// memoryStorage is the fallback mechanism in 'storage'
+storage.setItem('proxy-storage-test', {data: 'it works!'});
+storage.getItem('proxy-storage-test');
 ```
 
 ## configStorage
@@ -262,6 +290,7 @@ function isSafariInPrivateMode(flags) {
 }
 ```
 
+<br>
 ## Versioning
 
 This projects adopts the [Semantic Versioning](http://semver.org/) (SemVer) guidelines:

@@ -30,12 +30,36 @@
  *
  * @type {object}
  */
-const proxy = {
+const _proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
   cookieStorage: cookieStorage(),
   memoryStorage: memoryStorage(),
 };
+
+/**
+ * @private
+ *
+ * Stores the interceptors for WebStorage methods
+ *
+ * @type {object}
+ */
+const _interceptors = {
+  setItem: [],
+  getItem: [],
+  removeItem: [],
+  clear: [],
+};
+
+/**
+ * Executes the interceptors of a WebStorage method
+ *
+ * @param  {string} command: name of the method to intercept
+ * @return {void}
+ */
+function executeInterceptors(command, ...args) {
+  _interceptors[command].forEach((action) => action(...args));
+}
 
 /**
  * @private
@@ -49,6 +73,25 @@ function checkEmpty(key) {
   if (key == null || key === '') {
     throw new Error('The key provided can not be empty');
   }
+}
+
+/**
+ * @private
+ *
+ * Creates a non-enumerable read-only property.
+ *
+ * @param  {object} obj: the object to add the property
+ * @param  {string} name: the name of the property
+ * @param  {any} value: the value of the property
+ * @return {void}
+ */
+function setProperty(obj, name, value) {
+  Object.defineProperty(obj, name, {
+    configurable: false,
+    enumerable: false,
+    writable: false,
+    value: value,
+  });
 }
 
 /**
@@ -71,15 +114,10 @@ class WebStorage {
    * @memberOf WebStorage
    */
   constructor(storageType) {
-    if (!proxy.hasOwnProperty(storageType)) {
+    if (!_proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
-    Object.defineProperty(this, '__storage', {
-      configurable: false,
-      enumerable: false,
-      writable: false,
-      value: proxy[storageType],
-    });
+    setProperty(this, '__storage', _proxy[storageType]);
   }
   /**
    * Stores a value given a key name.
@@ -92,6 +130,7 @@ class WebStorage {
    */
   setItem(key, value) {
     checkEmpty(key);
+    executeInterceptors('setItem', key, value);
     value = JSON.stringify(value);
     this.__storage.setItem(key, value);
   }
@@ -105,8 +144,9 @@ class WebStorage {
    */
   getItem(key) {
     checkEmpty(key);
-    const value = this.__storage.getItem(key);
-    return JSON.parse(value);
+    executeInterceptors('getItem', key);
+    const value = JSON.parse(this.__storage.getItem(key));
+    return value;
   }
   /**
    * Deletes a key from the storage.
@@ -118,6 +158,7 @@ class WebStorage {
    */
   removeItem(key) {
     checkEmpty(key);
+    executeInterceptors('removeItem', key);
     this.__storage.removeItem(key);
   }
   /**
@@ -128,7 +169,21 @@ class WebStorage {
    * @memberOf WebStorage
    */
   clear() {
+    executeInterceptors('clear');
     this.__storage.clear();
+  }
+  /**
+   * Adds an interceptor to a WebStorage method
+   *
+   * @param  {string} command: name of the API method to intercept
+   * @param  {function} action: callback executed when the API method is called
+   * @return {void}
+   *
+   * @memberOf WebStorage
+   */
+  static interceptors(command, action) {
+    if (command in _interceptors && typeof action === 'function')
+      _interceptors[command].push(action);
   }
 }
 
@@ -160,7 +215,7 @@ let storage = null;
  * Current storage type
  * @type {string}
  */
-let currentStorageName = null;
+let _currentStorageName = null;
 
 /**
  * @public
@@ -170,7 +225,7 @@ let currentStorageName = null;
  */
 const configStorage = {
   get() {
-    return currentStorageName;
+    return _currentStorageName;
   },
 
   /**
@@ -179,11 +234,11 @@ const configStorage = {
    * @return {void}
    */
   set(storageType) {
-    if (!proxy.hasOwnProperty(storageType)) {
+    if (!_proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
     storage = new WebStorage(storageType);
-    currentStorageName = storageType;
+    _currentStorageName = storageType;
   },
 };
 
@@ -352,7 +407,7 @@ function setStoreToWindow(hashtable) {
  * @return {boolean}
  */
 function isStorageAvailable(storageType) {
-  const storageObj = proxy[storageType];
+  const storageObj = _proxy[storageType];
   const data = '__proxy-storage__';
   try {
     storageObj.setItem(data, data);
