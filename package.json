@@ -1,7 +1,7 @@
 {
   "name": "proxy-storage",
   "description": "Storage mechanism that implements the Web Storage interface",
-  "version": "0.3.0",
+  "version": "0.3.3",
   "author": "David Rivera <jherax@gmail.com>",
   "src": "src/proxy-storage.js",
   "main": "dist/proxy-storage.js",
@@ -20,6 +20,7 @@
   "bugs": {
     "url": "https://github.com/jherax/proxy-storage/issues"
   },
+  "homepage": "https://github.com/jherax/proxy-storage#readme",
   "scripts": {
     "build": "webpack",
     "eslint": "eslint src || true"

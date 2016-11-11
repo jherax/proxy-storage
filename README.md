@@ -4,65 +4,39 @@ This library is intended to use as a proxy that implements a basic
 [Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage) interface, 
 which is very useful to deal with the lack of compatibility between 
 [document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) and 
-[localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage), 
-[sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
+[localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) / 
+[sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) api.
 
 It also provides a fallback that stores the data in memory when all of above mechanisms are not available, 
-for example in some browsers using private navigation. The behavior of the _`memoryStorage`_ is similar to 
+for example in some browsers when you are in private navigation. The behavior of the _`memoryStorage`_ is similar to 
 [_sessionStorage_](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 
 The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store 
 `Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
 `sessionStorage` and `cookie` storages.
 
+Another plus in [`proxy-storage`](https://github.com/jherax/proxy-storage) is that you can register [interceptors](#static-methods) 
+for each of the exposed [Web Storage methods](#storage): `setItem`, `getItem`, `removeItem`, `clear` 
+
 ## Getting started
 
-In order to generate the ES5 and minified files, you must build this project.
-
-## Requirements
-
-1. Git ([git-linux](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) or [git-windows](https://git-for-windows.github.io/)).
-2. [Node.js](https://nodejs.org/en/) (latest stable version v6+).
-3. Node Package Manager ([npm](https://docs.npmjs.com/) v3+), the one that comes with your **node.js** version.<br/>It is preferable to install Node Version Manager - **[nvm](https://github.com/creationix/nvm)**, it contains both **node.js** and **npm**.
-4. [Yarn](https://yarnpkg.com/en/docs/cli/) installed as a global package.
-
-**NOTE**: Consider to install Node Version Manager (**NVM**) to upgrade easily the Node.js version. Go to https://github.com/creationix/nvm and check the installation process for your OS.
-
-## Running the project
-
-Clone the repository:
+To include this library into your package manager with `npm` or `yarn`
 
 ```shell
-$ git https://github.com/jherax/proxy-storage.git
+# with npm
+$ npm install proxy-storage --save
+
+# with yarn
+$ yarn add proxy-storage
 ```
-
-If you dont have installed `yarn` as a global package, run this command:
-
-```shell
-$ npm install -g yarn
-```
-
-Now `yarn` will install dependencies in [`package.json`](package.json):
-
-```shell
-$ yarn
-```
-
-And finally execute the webpack task:
-
-```shell
-$ yarn run build
-```
-
-This command will use [Babel](https://babeljs.io/) to transpile the ES2015 (ES6) Module in `src/` folder to an UMD ES5 Module in `dest/`  
-and also it will generate the minified version and source maps.
 
 ## Including the library
 
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/<version>/dist/proxy-storage.min.js"></script>
+<!-- last version: 0.3.1 -->
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/0.3.1/dist/proxy-storage.min.js"></script>
 ``` 
 
 In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
@@ -102,9 +76,16 @@ import storage, { WebStorage, configStorage } from 'proxy-storage';
 ### AMD
 
 ```javascript
-define(['proxy-storage'], function(WebStorage){
-    // here, the WebStorage constructor is available
-    var sessionStore = new WebStorage('sessionStorage');
+requirejs.config({
+  paths: {
+    'proxy-storage': '<PATH>/proxy-storage.min'
+  }
+});
+define(['proxy-storage'], function(proxyStorage) {
+  // localStorage usually is the default storage
+  var storage = proxyStorage.default;
+  // creates a new storage mechanism
+  var sessionStore = new proxyStorage.WebStorage('sessionStorage');
 });
 ```
 
@@ -114,27 +95,30 @@ The exposed Web Storage interface allow us saving data as **JSON**, with the adv
 `Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
 `sessionStorage` and `cookie` storages.
 
-This library has been written as a **ES2015 module** and the exported API contains the following members:
+This library has been written as an **ES2015 module** and the exported API contains the following members:
 
 ## storage
 
-_@type_ `Object`. This is the _(default module)_ and is an instance of [`WebStorage`](#webstorage). 
-It saves and retrieves the data internally as JSON, which allow not only store **Primitive** values 
-but also **Object** values. It contains the following methods:
+_@type_ `Object`. This is the **default** module and is an instance of [`WebStorage`](#webstorage). 
+It saves and retrieves the data internally as JSON, which allows not only store **Primitive** values 
+but also **Object** values. It inherits the following methods in the `WebStorage` prototype:
 
-- **`setItem`**`(key, value)`: stores a `value` given a `key` name.
+- **`setItem`**`(key, value [,expires] [,path])`: stores a `value` given a `key` name.<br>
+  `expires` (days) and `path` are optional parameters only when using `cookieStorage`
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
 - **`removeItem`**`(key)`: deletes a key from the storage.
 - **`clear`**`()`: removes all keys from the storage.
 
-By default this object handles and adapter for the first storage mechanism available. 
+By default this object is a proxy for the first storage mechanism available, usually `localStorage`. 
 The availability is determined in the following order:
 
 1. **`localStorage`**: proxy for [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) object.
 2. **`sessionStorage`**: proxy for [sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) object.
-3. **`cookieStorage`**: proxy for [document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) object that implements Web Storage.
-4. **`memoryStorage`**: internal storage mechanism that can be used as a fallback when none of the above mechanisms are available. 
-The behavior of _memoryStorage_ is similar to _sessionStorage_.
+3. **`cookieStorage`**: proxy for [document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) object and implements the Web Storage interface.
+4. **`memoryStorage`**: internal storage mechanism that can be used as a **fallback** when none of the above mechanisms are available. 
+The behavior of _`memoryStorage`_ is similar to _`sessionStorage`_
+
+**Note**: you can override the default storage mechanism by setting the new storage type with [configStorage.set()](#configstorage)
 
 #### Example
 
@@ -147,8 +131,8 @@ storage.setItem('qwerty', [{ some: 'object', garbage: true }]);
 let data = storage.getItem('qwerty');
 // [{ some: 'object', garbage: true }]
 
-storage.setItem('o-really', { usual: 'nothing' });
-storage.setItem('to-persist', false);
+storage.setItem('o-really', { status: 'saved' });
+storage.setItem('persisted', true);
 
 storage.removeItem('qwerty');
 data = storage.getItem('qwerty');
@@ -162,9 +146,12 @@ data = storage.getItem('o-really');
 
 ## WebStorage
 
-_@type_ `Class`. This constructor implements the Web Storage interface. You can create new instances 
-of this `class` which will allow you manage different storage mechanisms. It is very useful when you need 
-to store data in more than one storage mechanism at the same time.
+_@type_ `Class`. This constructor implements the [Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage) interface
+and handles an adapter that allows to store values `Object` and `Array<Any>`. It also lets you register [interceptors](#static-methods) 
+for the methods `setItem`, `getItem`, `removeItem` and `clear`.
+
+You can create multiple instances of _`WebStorage`_ to handle different storage mechanisms. It is very useful when you need 
+to store data in more than one storage mechanism at the same time, for example in `cookies` but also in `sessionStorage`
 
 #### Example
 
@@ -198,7 +185,7 @@ function clearDataFromStorage() {
 
 ### Static Methods
 
-**`WebStorage`** provides the static method `interceptors` which allows us to register callbacks that runs when an API method is invoked.
+**`WebStorage`** provides the static method `interceptors` which allows us to register callbacks that runs when an API method is invoked. 
 It is very useful when you need to perform some additional actions when accessing the `WebStorage` methods.
 
 - **`WebStorage.interceptors`**`(command, action)`: adds an interceptor to a `WebStorage` method. 
@@ -225,9 +212,9 @@ storage.getItem('proxy-storage-test');
 
 ## configStorage
 
-_@type_ `Object`. Get and set the storage mechanism to use by default. It contains the following methods:
+_@type_ `Object`. Gets and sets the storage mechanism to use by default. It contains the following methods:
 
-- **`get`**`()`: returns a `String` with the name of the current storage mechanism.
+- **`get`**`()`: returns a `string` with the name of the current storage mechanism.
 - **`set`**`(storageType)`: sets the current storage mechanism. `storageType` must be one of the 
 following strings: `"localStorage"`, `"sessionStorage"`, `"cookieStorage"`, or `"memoryStorage"`
 
@@ -262,17 +249,17 @@ _@type_ `Object`. Determines which storage mechanisms are available. It contains
 #### Example
 
 ```javascript
-import storage, * as storageApi from 'proxy-storage';
-// * imports the entire module's members into storageApi.
+import storage, * as proxyStorage from 'proxy-storage';
+// * imports the entire module's members into proxyStorage.
 
 console.info('Available storage mechanisms');
-console.log(storageApi.isAvaliable);
+console.log(proxyStorage.isAvaliable);
 
 function init() {
   // memoryStorage is always available
-  storageApi.configStorage.set('memoryStorage');
+  proxyStorage.configStorage.set('memoryStorage');
 
-  if (isSafariInPrivateMode(storageApi.isAvaliable)) {
+  if (isSafariInPrivateMode(proxyStorage.isAvaliable)) {
     // do something additional...
   }
 
@@ -290,7 +277,51 @@ function isSafariInPrivateMode(flags) {
 }
 ```
 
-<br>
+## Running the project
+
+If you want to fork or build your own, you must run this project.
+
+### Requirements
+
+1. Git ([git-linux](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) or [git-windows](https://git-for-windows.github.io/)).
+2. [Node.js](https://nodejs.org/en/) (latest stable version v6+).
+3. Node Package Manager ([npm](https://docs.npmjs.com/) v3+), the one that comes with your **node.js** version.<br/>
+   It is preferable to install Node Version Manager - **[nvm](https://github.com/creationix/nvm)**, it contains both **node.js** and **npm**.
+4. [Yarn](https://yarnpkg.com/en/docs/cli/) installed as a global package.
+
+**NOTE**: Consider to install Node Version Manager (**NVM**) to upgrade easily the Node.js version.<br>
+Go to https://github.com/creationix/nvm and check the installation process for your OS.
+
+### Building the project
+
+Clone the repository:
+
+```shell
+$ git https://github.com/jherax/proxy-storage.git
+```
+
+If you don't have installed `yarn` as a global package, run this command:
+
+```shell
+$ npm install -g yarn
+```
+
+Now `yarn` will install dependencies in [`package.json`](package.json):
+
+```shell
+$ yarn
+```
+
+And finally execute the webpack task:
+
+```shell
+$ yarn run build
+```
+
+This command will lint the code with [ESLint](http://eslint.org/docs/user-guide/getting-started) and after that 
+it will transpile with [Babel](https://babeljs.io/) the ES2015 Module in `src/` folder to an UMD ES5 Module in `dist/` 
+and finally it will generate the minified and source map files.
+
 ## Versioning
 
 This projects adopts the [Semantic Versioning](http://semver.org/) (SemVer) guidelines:

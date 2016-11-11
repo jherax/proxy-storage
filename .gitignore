@@ -2,10 +2,6 @@
 # Windows detritus
 # =========================
 
-# Windows image file caches
-Thumbs.db
-ehthumbs.db
-
 # Folder config file
 Desktop.ini
 
@@ -16,12 +12,11 @@ $RECYCLE.BIN/
 .DS_Store
 
 *~
-.settings
-.idea/
 
 # =========================
 # Project ignored files
 # =========================
 
-npm-debug.log*
+npm-debug.log
+yarn-error.log
 /node_modules
