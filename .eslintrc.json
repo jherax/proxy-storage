@@ -1,6 +1,7 @@
 {
   "extends": [
-    "eslint:recommended"
+    "eslint:recommended",
+    "google"
   ],
   "root": true,
   "env": {
@@ -18,5 +19,14 @@
       "experimentalObjectRestSpread": true
     }
   },
-  "rules": {}
+  "rules": {
+    "valid-jsdoc": [1, {
+      "requireReturnDescription": false
+    }],
+    "one-var": [2, {
+      "uninitialized": "always"
+    }],
+    "max-len": 0,
+    "object-curly-spacing": [2, "never"]
+  }
 }

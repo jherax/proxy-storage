@@ -1,4 +1,4 @@
-/* eslint-disable no-use-before-define, one-var, max-len */
+/* eslint-disable no-use-before-define, no-invalid-this */
 
 /**
  * This library uses an adapter that implements the Web Storage interface,
@@ -28,7 +28,7 @@
  * @Reference
  * https://developer.mozilla.org/en-US/docs/Web/API/Storage
  *
- * @type {Object}
+ * @type {object}
  */
 const proxy = {
   localStorage: window.localStorage,
@@ -42,10 +42,11 @@ const proxy = {
  *
  * Validates if the key is not empty.
  * (null, undefined or empty string)
- * @param  {String} key
+ * @param  {string} key: keyname of the storage
+ * @return {void}
  */
 function checkEmpty(key) {
-  if (key == null || key === '') { // eslint-disable-line
+  if (key == null || key === '') {
     throw new Error('The key provided can not be empty');
   }
 }
@@ -62,7 +63,13 @@ function checkEmpty(key) {
  * @type {Class}
  */
 class WebStorage {
-  // @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+  /**
+   * Creates an instance of WebStorage.
+   *
+   * @param {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+   *
+   * @memberOf WebStorage
+   */
   constructor(storageType) {
     if (!proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
@@ -74,20 +81,52 @@ class WebStorage {
       value: proxy[storageType],
     });
   }
+  /**
+   * Stores a value given a key name.
+   *
+   * @param  {string} key: keyname of the storage
+   * @param  {any} value: data to save in the storage
+   * @return {void}
+   *
+   * @memberOf WebStorage
+   */
   setItem(key, value) {
     checkEmpty(key);
     value = JSON.stringify(value);
     this.__storage.setItem(key, value);
   }
+  /**
+   * Retrieves a value by its key name.
+   *
+   * @param  {string} key: keyname of the storage
+   * @return {void}
+   *
+   * @memberOf WebStorage
+   */
   getItem(key) {
     checkEmpty(key);
     const value = this.__storage.getItem(key);
     return JSON.parse(value);
   }
+  /**
+   * Deletes a key from the storage.
+   *
+   * @param  {string} key: keyname of the storage
+   * @return {void}
+   *
+   * @memberOf WebStorage
+   */
   removeItem(key) {
     checkEmpty(key);
     this.__storage.removeItem(key);
   }
+  /**
+   * Removes all keys from the storage.
+   *
+   * @return {void}
+   *
+   * @memberOf WebStorage
+   */
   clear() {
     this.__storage.clear();
   }
@@ -98,7 +137,7 @@ class WebStorage {
  *
  * Determines which storage mechanisms are available.
  *
- * @type {Object}
+ * @type {object}
  */
 const isAvaliable = {
   localStorage: false,
@@ -111,22 +150,34 @@ const isAvaliable = {
  * @public
  *
  * Current storage mechanism.
- * @type {Object}
+ * @type {object}
  */
 let storage = null;
+
+/**
+ * @private
+ *
+ * Current storage type
+ * @type {string}
+ */
 let currentStorageName = null;
 
 /**
  * @public
  *
  * Get/Set the storage mechanism to use by default.
- *
- * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+ * @type {object}
  */
 const configStorage = {
   get() {
     return currentStorageName;
   },
+
+  /**
+   * Sets the storage mechanism to use by default.
+   * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+   * @return {void}
+   */
   set(storageType) {
     if (!proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
@@ -144,11 +195,13 @@ const configStorage = {
  * @Reference
  * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
  *
- * @type {Object}
+ * @type {object}
  */
 const $cookie = {
   get: () => document.cookie,
-  set: (value) => { document.cookie = value },
+  set: (value) => {
+    document.cookie = value;
+  },
 };
 
 /**
@@ -157,7 +210,7 @@ const $cookie = {
  * Manages actions for creation/reading/deleting cookies.
  * Implements Web Storage interface methods.
  *
- * @return {Object}
+ * @return {object}
  */
 function cookieStorage() {
   const api = {
@@ -208,8 +261,8 @@ function cookieStorage() {
  * @private
  *
  * Callback that finds an element in the array.
- * @param  {String} cookie: key=value
- * @return {Boolean}
+ * @param  {string} cookie: key=value
+ * @return {boolean}
  */
 function findCookie(cookie) {
   const nameEQ = this.toString();
@@ -221,8 +274,8 @@ function findCookie(cookie) {
  * @private
  *
  * Callback that finds an element in the array.
- * @param  {Object} item: {key, value}
- * @return {Boolean}
+ * @param  {object} item: {key, value}
+ * @return {boolean}
  */
 function findItem(item) {
   const key = this.toString();
@@ -236,7 +289,7 @@ function findItem(item) {
  * Implements Web Storage interface methods.
  * It also adds a hack to persist the store as a session in the current window.
  *
- * @return {Object}
+ * @return {object}
  */
 function memoryStorage() {
   const hashtable = getStoreFromWindow();
@@ -244,7 +297,7 @@ function memoryStorage() {
     setItem(key, value) {
       const item = hashtable.find(findItem, key);
       if (item) item.value = value;
-      else hashtable.push({ key, value });
+      else hashtable.push({key, value});
       setStoreToWindow(hashtable);
     },
     getItem(key) {
@@ -269,7 +322,7 @@ function memoryStorage() {
  * @private
  *
  * Gets the hashtable store from the current window.
- * @return {Array}
+ * @return {array}
  */
 function getStoreFromWindow() {
   try {
@@ -283,6 +336,8 @@ function getStoreFromWindow() {
  * @private
  *
  * Saves the hashtable store in the current window.
+ * @param  {array} hashtable: list of objects stored in memoryStorage
+ * @return {void}
  */
 function setStoreToWindow(hashtable) {
   const store = JSON.stringify(hashtable);
@@ -293,8 +348,8 @@ function setStoreToWindow(hashtable) {
  * @private
  *
  * Checks whether a storage mechanism is available.
- * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
- * @return {Boolean}
+ * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+ * @return {boolean}
  */
 function isStorageAvailable(storageType) {
   const storageObj = proxy[storageType];
@@ -312,8 +367,8 @@ function isStorageAvailable(storageType) {
  * @private
  *
  * Sets the default storage mechanism available.
- * @param {String} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
- * @return {Boolean}
+ * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+ * @return {boolean}
  */
 function storageAvaliable(storageType) {
   if (isAvaliable[storageType]) {
@@ -326,6 +381,7 @@ function storageAvaliable(storageType) {
  * @private
  *
  * Initializes the module.
+ * @return {void}
  */
 function init() {
   isAvaliable.localStorage = isStorageAvailable('localStorage');
@@ -337,5 +393,5 @@ function init() {
 
 init();
 
-// @public
-export { storage as default, WebStorage, configStorage, isAvaliable };
+// @public API
+export {storage as default, WebStorage, configStorage, isAvaliable};
