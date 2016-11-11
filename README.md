@@ -15,20 +15,35 @@ The exposed Web Storage interface allow us saving data as **JSON**, with the adv
 `Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
 `sessionStorage` and `cookie` storages.
 
+Another plus in [`proxy-storage`](https://github.com/jherax/proxy-storage) is that you can register [interceptors](#static-methods) 
+to each of the [Web Storage methods](#storage) exposed: `setItem`, `getItem`, `removeItem`, `clear` 
+
 ## Getting started
 
-In order to generate the ES5 and minified files, you must build this project.
+To include this library into your package manager (`npm` or `yarn`)
 
-## Requirements
+```shell
+# with npm
+$ npm install proxy-storage --save
+
+# with yarn
+$ yarn add proxy-storage
+```
+
+If you want to fork or build your own, you must build this project.
+
+### Requirements
 
 1. Git ([git-linux](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) or [git-windows](https://git-for-windows.github.io/)).
 2. [Node.js](https://nodejs.org/en/) (latest stable version v6+).
-3. Node Package Manager ([npm](https://docs.npmjs.com/) v3+), the one that comes with your **node.js** version.<br/>It is preferable to install Node Version Manager - **[nvm](https://github.com/creationix/nvm)**, it contains both **node.js** and **npm**.
+3. Node Package Manager ([npm](https://docs.npmjs.com/) v3+), the one that comes with your **node.js** version.<br/>
+It is preferable to install Node Version Manager - **[nvm](https://github.com/creationix/nvm)**, it contains both **node.js** and **npm**.
 4. [Yarn](https://yarnpkg.com/en/docs/cli/) installed as a global package.
 
-**NOTE**: Consider to install Node Version Manager (**NVM**) to upgrade easily the Node.js version. Go to https://github.com/creationix/nvm and check the installation process for your OS.
+**NOTE**: Consider to install Node Version Manager (**NVM**) to upgrade easily the Node.js version.<br>
+Go to https://github.com/creationix/nvm and check the installation process for your OS.
 
-## Running the project
+### Running the project
 
 Clone the repository:
 
@@ -54,14 +69,15 @@ And finally execute the webpack task:
 $ yarn run build
 ```
 
-This command will use [Babel](https://babeljs.io/) to transpile the ES2015 (ES6) Module in `src/` folder to an UMD ES5 Module in `dest/`  
-and also it will generate the minified version and source maps.
+This command will use [Babel](https://babeljs.io/) to transpile the ES2015 (ES6) Module in `src/` folder 
+to an UMD ES5 Module in `dest/` and also it will generate the minified version and the source map.
 
 ## Including the library
 
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
+<!-- last version: 0.3.1 -->
 <script src="https://cdn.rawgit.com/jherax/proxy-storage/<version>/dist/proxy-storage.min.js"></script>
 ``` 
 
@@ -198,7 +214,7 @@ function clearDataFromStorage() {
 
 ### Static Methods
 
-**`WebStorage`** provides the static method `interceptors` which allows us to register callbacks that runs when an API method is invoked.
+**`WebStorage`** provides the static method `interceptors` which allows us to register callbacks that runs when an API method is invoked. 
 It is very useful when you need to perform some additional actions when accessing the `WebStorage` methods.
 
 - **`WebStorage.interceptors`**`(command, action)`: adds an interceptor to a `WebStorage` method. 
