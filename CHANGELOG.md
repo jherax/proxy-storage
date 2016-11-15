@@ -1,3 +1,26 @@
+# 1.0.0
+
+### Features
+
+1. Added keys and `length` to the `WebStorage` instances.
+
+### Breaking changes
+
+The method `setItem` has changed its signature when the storage mechanism is set to `"cookieStorage"`
+<br/>See more documentation [here](README.md#setitem-for-cookiestorage).
+
+**New signature**
+
+```javascript
+setItem (key {string}, value {any}, options {object});
+```
+
+**Old signature**
+
+```javascript
+setItem (key {string}, value {any}, expires {number}, path {string});
+```
+
 # 0.3.0
 
 ### Features

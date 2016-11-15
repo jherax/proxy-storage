@@ -44,6 +44,15 @@ module.exports = {
     new webpack.optimize.UglifyJsPlugin({
       test: /\.min.js($|\?)/i,
       minimize: true,
+      // https://github.com/mishoo/UglifyJS2#compressor-options
+      compress: {
+        dead_code: true,
+        drop_debugger: true,
+        drop_console: true,
+      },
+      mangle: {
+        except: ['WebStorage'],
+      },
     }),
     // plugins are read from bottom to top
     new webpack.SourceMapDevToolPlugin({

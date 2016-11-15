@@ -16,7 +16,7 @@ The exposed Web Storage interface allow us saving data as **JSON**, with the adv
 `sessionStorage` and `cookie` storages.
 
 Another plus in [`proxy-storage`](https://github.com/jherax/proxy-storage) is that you can register [interceptors](#static-methods) 
-for each of the exposed [Web Storage methods](#storage): `setItem`, `getItem`, `removeItem`, `clear` 
+for each of the exposed [Web Storage methods](#storage-or-default): `setItem`, `getItem`, `removeItem`, `clear` 
 
 ## Getting started
 
@@ -35,8 +35,8 @@ $ yarn add proxy-storage
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<!-- last version: 0.3.1 -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/0.3.1/dist/proxy-storage.min.js"></script>
+<!-- last version: 1.0.0 -->
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.0/dist/proxy-storage.min.js"></script>
 ``` 
 
 In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
@@ -97,17 +97,18 @@ The exposed Web Storage interface allow us saving data as **JSON**, with the adv
 
 This library has been written as an **ES2015 module** and the exported API contains the following members:
 
-## storage
+## storage (or default)
 
 _@type_ `Object`. This is the **default** module and is an instance of [`WebStorage`](#webstorage). 
 It saves and retrieves the data internally as JSON, which allows not only store **Primitive** values 
 but also **Object** values. It inherits the following methods in the `WebStorage` prototype:
 
-- **`setItem`**`(key, value [,expires] [,path])`: stores a `value` given a `key` name.<br>
-  `expires` (days) and `path` are optional parameters only when using `cookieStorage`
+- **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.<br>
+  `options` is an optional parameter and only works with `cookieStorage`. See [here](#setitem-for-cookiestorage) for more details. 
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
 - **`removeItem`**`(key)`: deletes a key from the storage.
 - **`clear`**`()`: removes all keys from the storage.
+- **`length`**: Gets the number of data items stored in the storage object.
 
 By default this object is a proxy for the first storage mechanism available, usually `localStorage`. 
 The availability is determined in the following order:
@@ -144,6 +145,62 @@ data = storage.getItem('o-really');
 // null
 ```
 
+### setItem for cookieStorage
+
+When you are working with an instance of `WebStorage` and set its mechanism to `"cookieStorage"`, the API method `.setItem()` 
+has a special behavior, allowing you to set an expiration date and also specifying a path where the cookie will be valid.
+
+`setItem(key, value, options)` receives the optional parameter `options` which is an object where you can specify the following properties:
+
+* `path` `{string}`: the relative path where the cookie will be valid. Its default value is `"/"`
+* `expires` `{Date, object}`: the expiration date of the cookie. Also you can provide an object to describe the expiration date:
+  - `date`&nbsp;&nbsp;&nbsp; `{Date}`: if provided, the timestamps will affect this date, otherwise a new current date will be used.
+  - `hours`&nbsp;&nbsp;`{number}`: hours to add / subtract
+  - `days`&nbsp;&nbsp;&nbsp; `{number}`: days to add / subtract
+  - `months`&nbsp;`{number}`: months to add / subtract
+  - `years`&nbsp;&nbsp; `{number}`: years to add / subtract
+
+#### Example
+
+```javascript
+import { WebStorage } from 'proxy-storage';
+
+const cookieStore = new WebStorage('cookieStorage');
+const data = {
+  start: new Date().toISOString(),
+  sessionId: 'J34H5J34609-DSFG7BND98W3',
+  platform: 'Linux x86_64',
+};
+const options = {
+  path: '/profile',
+  expires: { hours: 6 }
+};
+
+cookieStore.setItem('activity', data, options);
+cookieStore.setItem('valid', true, {expires: new Date('2017/01/02')});
+```
+
+### Getting all items stored
+
+As this library implements the Web Storage interface, you can access to all data items in the same way as `localStorage` or `sessionStorage`,
+thus you can loop over the keys in the storage mechanism you are using (`localStorage`, `sessionStorage`, `cookieStorage`, `memoryStorage`)
+
+```javascript
+const cookieStore = new WebStorage('cookieStorage');
+
+cookieStore.setItem('test1', 1);
+cookieStore.setItem('test2', 2);
+
+// loop over the storage object
+Object.keys(cookieStore).forEach((key) => {
+  console.log(key, cookieStore[key]);
+});
+// or...
+for (let key in cookieStore) {
+  console.log(key, cookieStore[key]);
+}
+``` 
+
 ## WebStorage
 
 _@type_ `Class`. This constructor implements the [Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage) interface
@@ -166,9 +223,9 @@ const sessionStore = new WebStorage('sessionStorage');
 sessionStore.setItem('character', { name: 'Mordecai' });
 
 // saves also in cookies
-const expires = 1; // 1 day
+const options = { expires: {days:1} };
 const cookieStore = new WebStorage('cookieStorage');
-cookieStore.setItem('character', { name: 'Rigby' }, expires);
+cookieStore.setItem('character', { name: 'Rigby' }, options);
 ```
 
 #### Clearing all data

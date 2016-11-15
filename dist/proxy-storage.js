@@ -199,6 +199,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	   *
 	   * @param  {string} key: keyname of the storage
 	   * @param  {any} value: data to save in the storage
+	   * @param  {object} options: additional options for cookieStorage
 	   * @return {void}
 	   *
 	   * @memberOf WebStorage
@@ -207,11 +208,12 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  _createClass(WebStorage, [{
 	    key: 'setItem',
-	    value: function setItem(key, value) {
+	    value: function setItem(key, value, options) {
 	      checkEmpty(key);
-	      executeInterceptors('setItem', key, value);
+	      this[key] = value;
+	      executeInterceptors('setItem', key, value, options);
 	      value = JSON.stringify(value);
-	      this.__storage.setItem(key, value);
+	      this.__storage.setItem(key, value, options);
 	    }
 	    /**
 	     * Retrieves a value by its key name.
@@ -243,6 +245,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'removeItem',
 	    value: function removeItem(key) {
 	      checkEmpty(key);
+	      delete this[key];
 	      executeInterceptors('removeItem', key);
 	      this.__storage.removeItem(key);
 	    }
@@ -257,8 +260,26 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'clear',
 	    value: function clear() {
+	      var _this = this;
+
 	      executeInterceptors('clear');
+	      Object.keys(this).forEach(function (key) {
+	        return delete _this[key];
+	      });
 	      this.__storage.clear();
+	    }
+	    /**
+	     * Gets the number of data items stored in the Storage object.
+	     *
+	     * @readonly
+	     *
+	     * @memberOf WebStorage
+	     */
+
+	  }, {
+	    key: 'length',
+	    get: function get() {
+	      return Object.keys(this).length;
 	    }
 	    /**
 	     * Adds an interceptor to a WebStorage method
@@ -341,6 +362,55 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
+	 * Determines whether a value is a plain object
+	 *
+	 * @param  {any} value: the object to test
+	 * @return {boolean}
+	 */
+	function isObject(value) {
+	  return Object.prototype.toString.call(value) === '[object Object]';
+	}
+
+	/**
+	 * @private
+	 *
+	 * Allows add or subtract timestamps to the current date or to a specific date.
+	 * @param  {object} options: It contains the timestamps to add or remove to the date, and have the following properties:
+	 *         - {Date} date: if provided, the timestamps will affect this date, otherwise a new current date will be used.
+	 *         - {number} hours: hours to add/subtract
+	 *         - {number} days: days to add/subtract
+	 *         - {number} months: months to add/subtract
+	 *         - {number} years: years to add/subtract
+	 * @return {Date}
+	 */
+	function setTimestamp() {
+	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	  var opt = Object.assign({}, options);
+	  var d = opt.date instanceof Date ? opt.date : new Date();
+	  if (+opt.hours) d.setHours(d.getHours() + opt.hours);
+	  if (+opt.days) d.setDate(d.getDate() + opt.days);
+	  if (+opt.months) d.setMonth(d.getMonth() + opt.months);
+	  if (+opt.years) d.setFullYear(d.getFullYear() + opt.years);
+	  return d;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Builds the expiration part for the cookie
+	 *
+	 * @param  {Date|object} date: the expiration date. See `setTimestamp(options)`
+	 * @return {string}
+	 */
+	function buildExpirationString(date) {
+	  var expires = date instanceof Date ? setTimestamp({ date: date }) : setTimestamp(date);
+	  return '; expires=' + expires.toUTCString();
+	}
+
+	/**
+	 * @private
+	 *
 	 * Alias for the default cookie storage associated with the current document.
 	 *
 	 * @Reference
@@ -367,17 +437,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function cookieStorage() {
 	  var api = {
-	    setItem: function setItem(key, value, days) {
-	      var path = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : '/';
-
-	      var expires = '';
-	      if (days) {
-	        var date = new Date();
-	        days = days * 24 * 60 * 60 * 1000;
-	        date.setTime(date.getTime() + days);
-	        expires = '; expires=' + date.toUTCString();
+	    setItem: function setItem(key, value, options) {
+	      var expires = '',
+	          cookie = void 0;
+	      options = Object.assign({ path: '/' }, options);
+	      if (isObject(options.expires) || options.expires instanceof Date) {
+	        expires = buildExpirationString(options.expires);
 	      }
-	      $cookie.set(key + '=' + encodeURIComponent(value) + expires + '; path=' + path);
+	      cookie = key + '=' + encodeURIComponent(value) + expires + '; path=' + options.path;
+	      $cookie.set(cookie);
 	    },
 	    getItem: function getItem(key) {
 	      var value = null;
@@ -391,7 +459,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      return value;
 	    },
 	    removeItem: function removeItem(key) {
-	      api.setItem(key, '', -1);
+	      api.setItem(key, '', { expires: { days: -1 } });
 	    },
 	    clear: function clear() {
 	      var eq = '=';

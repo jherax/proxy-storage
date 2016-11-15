@@ -1,7 +1,7 @@
 {
   "name": "proxy-storage",
   "description": "Storage mechanism that implements the Web Storage interface",
-  "version": "0.3.3",
+  "version": "1.0.0",
   "author": "David Rivera <jherax@gmail.com>",
   "src": "src/proxy-storage.js",
   "main": "dist/proxy-storage.js",
