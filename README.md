@@ -172,7 +172,7 @@ const data = {
   platform: 'Linux x86_64',
 };
 const options = {
-  path: '/profile',
+  path: '/jherax',
   expires: { hours: 6 }
 };
 

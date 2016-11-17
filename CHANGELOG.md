@@ -1,3 +1,9 @@
+# 1.0.1
+
+### Fixes
+
+1. Fixed [#1](https://github.com/jherax/proxy-storage/issues/1): Storages have no existing elements when they are instantiated the first time
+
 # 1.0.0
 
 ### Features

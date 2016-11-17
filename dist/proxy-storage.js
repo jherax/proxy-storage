@@ -60,6 +60,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  value: true
 	});
 
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -88,6 +90,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
+	 * Proxy for the default cookie storage associated with the current document.
+	 *
+	 * @Reference
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
+	 *
+	 * @type {object}
+	 */
+	var $cookie = {
+	  get: function get() {
+	    return document.cookie;
+	  },
+	  set: function set(value) {
+	    document.cookie = value;
+	  }
+	};
+
+	/**
+	 * @private
+	 *
 	 * Proxy for Web Storage and Cookies.
 	 * All members implement the Web Storage interface.
 	 *
@@ -99,9 +120,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	var _proxy = {
 	  localStorage: window.localStorage,
 	  sessionStorage: window.sessionStorage,
-	  cookieStorage: cookieStorage(),
-	  memoryStorage: memoryStorage()
+	  cookieStorage: initApi(cookieStorage()),
+	  memoryStorage: initApi(memoryStorage())
 	};
+
+	/**
+	 * @private
+	 *
+	 * Adds the current elements in the storage object
+	 *
+	 * @param  {object} api: the API to initialize
+	 * @return {object}
+	 */
+	function initApi(api) {
+	  // sets read-only and non-enumerable properties
+	  for (var prop in api) {
+	    // eslint-disable-line
+	    if (prop !== 'initialize') setProperty(api, prop);
+	  }
+	  api.initialize();
+	  // this method is removed after being invoked
+	  // because is not part of the Web Storage interface
+	  delete api.initialize;
+	  return api;
+	}
+
+	/**
+	 * @private
+	 *
+	 * Creates a non-enumerable read-only property.
+	 *
+	 * @param  {object} obj: the object to add the property
+	 * @param  {string} name: the name of the property
+	 * @param  {any} value: the value of the property
+	 * @return {void}
+	 */
+	function setProperty(obj, name, value) {
+	  var descriptor = {
+	    configurable: false,
+	    enumerable: false,
+	    writable: false
+	  };
+	  if (typeof value !== 'undefined') {
+	    descriptor.value = value;
+	  }
+	  Object.defineProperty(obj, name, descriptor);
+	}
 
 	/**
 	 * @private
@@ -118,6 +182,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 	/**
+	 * @private
+	 *
 	 * Executes the interceptors of a WebStorage method
 	 *
 	 * @param  {string} command: name of the method to intercept
@@ -148,25 +214,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
-	 * @private
-	 *
-	 * Creates a non-enumerable read-only property.
-	 *
-	 * @param  {object} obj: the object to add the property
-	 * @param  {string} name: the name of the property
-	 * @param  {any} value: the value of the property
-	 * @return {void}
-	 */
-	function setProperty(obj, name, value) {
-	  Object.defineProperty(obj, name, {
-	    configurable: false,
-	    enumerable: false,
-	    writable: false,
-	    value: value
-	  });
-	}
-
-	/**
 	 * @public
 	 *
 	 * Implementation of the Web Storage interface.
@@ -187,12 +234,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @memberOf WebStorage
 	   */
 	  function WebStorage(storageType) {
+	    var _this = this;
+
 	    _classCallCheck(this, WebStorage);
 
 	    if (!_proxy.hasOwnProperty(storageType)) {
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
-	    setProperty(this, '__storage', _proxy[storageType]);
+	    setProperty(this, '__storage__', storageType);
+	    // copies all existing elements in the storage
+	    Object.keys(_proxy[storageType]).forEach(function (key) {
+	      var value = _proxy[storageType][key];
+	      try {
+	        _this[key] = JSON.parse(value);
+	      } catch (e) {
+	        _this[key] = value;
+	      }
+	    });
 	  }
 	  /**
 	   * Stores a value given a key name.
@@ -213,7 +271,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this[key] = value;
 	      executeInterceptors('setItem', key, value, options);
 	      value = JSON.stringify(value);
-	      this.__storage.setItem(key, value, options);
+	      _proxy[this.__storage__].setItem(key, value, options);
 	    }
 	    /**
 	     * Retrieves a value by its key name.
@@ -229,8 +287,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function getItem(key) {
 	      checkEmpty(key);
 	      executeInterceptors('getItem', key);
-	      var value = JSON.parse(this.__storage.getItem(key));
-	      return value;
+	      var value = _proxy[this.__storage__].getItem(key);
+	      return JSON.parse(value);
 	    }
 	    /**
 	     * Deletes a key from the storage.
@@ -247,7 +305,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      checkEmpty(key);
 	      delete this[key];
 	      executeInterceptors('removeItem', key);
-	      this.__storage.removeItem(key);
+	      _proxy[this.__storage__].removeItem(key);
 	    }
 	    /**
 	     * Removes all keys from the storage.
@@ -260,13 +318,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'clear',
 	    value: function clear() {
-	      var _this = this;
+	      var _this2 = this;
 
 	      executeInterceptors('clear');
 	      Object.keys(this).forEach(function (key) {
-	        return delete _this[key];
+	        return delete _this2[key];
 	      });
-	      this.__storage.clear();
+	      _proxy[this.__storage__].clear();
 	    }
 	    /**
 	     * Gets the number of data items stored in the Storage object.
@@ -326,14 +384,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	var storage = null;
 
 	/**
-	 * @private
-	 *
-	 * Current storage type
-	 * @type {string}
-	 */
-	var _currentStorageName = null;
-
-	/**
 	 * @public
 	 *
 	 * Get/Set the storage mechanism to use by default.
@@ -341,7 +391,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	var configStorage = {
 	  get: function get() {
-	    return _currentStorageName;
+	    return storage.__storage__;
 	  },
 
 
@@ -355,7 +405,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
 	    exports.default = storage = new WebStorage(storageType);
-	    _currentStorageName = storageType;
 	  }
 	};
 
@@ -411,21 +460,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
-	 * Alias for the default cookie storage associated with the current document.
-	 *
-	 * @Reference
-	 * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
-	 *
-	 * @type {object}
+	 * Callback that finds an element in the array.
+	 * @param  {string} cookie: key=value
+	 * @return {boolean}
 	 */
-	var $cookie = {
-	  get: function get() {
-	    return document.cookie;
-	  },
-	  set: function set(value) {
-	    document.cookie = value;
-	  }
-	};
+	function findCookie(cookie) {
+	  var nameEQ = this.toString();
+	  // prevent leading spaces before the key
+	  return cookie.trim().indexOf(nameEQ) === 0;
+	}
 
 	/**
 	 * @private
@@ -448,7 +491,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      $cookie.set(cookie);
 	    },
 	    getItem: function getItem(key) {
-	      var value = null;
+	      var value = void 0;
 	      var nameEQ = key + '=';
 	      var cookie = $cookie.get().split(';').find(findCookie, nameEQ);
 	      if (cookie) {
@@ -473,34 +516,17 @@ return /******/ (function(modules) { // webpackBootstrap
 	          api.removeItem(key.trim());
 	        }
 	      });
+	    },
+	    initialize: function initialize() {
+	      $cookie.get().split(';').forEach(function (cookie) {
+	        var index = cookie.indexOf('=');
+	        var key = cookie.substring(0, index).trim();
+	        var value = cookie.substring(index + 1).trim();
+	        api[key] = decodeURIComponent(value);
+	      });
 	    }
 	  };
 	  return api;
-	}
-
-	/**
-	 * @private
-	 *
-	 * Callback that finds an element in the array.
-	 * @param  {string} cookie: key=value
-	 * @return {boolean}
-	 */
-	function findCookie(cookie) {
-	  var nameEQ = this.toString();
-	  // prevent leading spaces before the key
-	  return cookie.trim().indexOf(nameEQ) === 0;
-	}
-
-	/**
-	 * @private
-	 *
-	 * Callback that finds an element in the array.
-	 * @param  {object} item: {key, value}
-	 * @return {boolean}
-	 */
-	function findItem(item) {
-	  var key = this.toString();
-	  return item.key === key;
 	}
 
 	/**
@@ -516,23 +542,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	  var hashtable = getStoreFromWindow();
 	  var api = {
 	    setItem: function setItem(key, value) {
-	      var item = hashtable.find(findItem, key);
-	      if (item) item.value = value;else hashtable.push({ key: key, value: value });
+	      hashtable[key] = value;
 	      setStoreToWindow(hashtable);
 	    },
 	    getItem: function getItem(key) {
-	      var item = hashtable.find(findItem, key);
-	      if (item) return item.value;
-	      return null;
+	      return hashtable[key];
 	    },
 	    removeItem: function removeItem(key) {
-	      var index = hashtable.findIndex(findItem, key);
-	      if (index > -1) hashtable.splice(index, 1);
+	      delete hashtable[key];
 	      setStoreToWindow(hashtable);
 	    },
 	    clear: function clear() {
-	      hashtable.length = 0;
+	      Object.keys(hashtable).forEach(function (key) {
+	        return delete hashtable[key];
+	      });
 	      setStoreToWindow(hashtable);
+	    },
+	    initialize: function initialize() {
+	      Object.assign(api, hashtable);
 	    }
 	  };
 	  return api;
@@ -541,22 +568,23 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
-	 * Gets the hashtable store from the current window.
-	 * @return {array}
+	 * Gets the hashtable-store from the current window.
+	 * @return {object}
 	 */
 	function getStoreFromWindow() {
 	  try {
 	    var store = JSON.parse(window.self.name);
-	    if (store instanceof Array) return store;
-	  } catch (e) {} // eslint-disable-line
-	  return []; /* {key,value} */
+	    if (store && (typeof store === 'undefined' ? 'undefined' : _typeof(store)) === 'object') return store;
+	  } catch (e) {
+	    return {};
+	  }
 	}
 
 	/**
 	 * @private
 	 *
-	 * Saves the hashtable store in the current window.
-	 * @param  {array} hashtable: list of objects stored in memoryStorage
+	 * Saves the hashtable-store in the current window.
+	 * @param  {object} hashtable: {key,value} pairs stored in memoryStorage
 	 * @return {void}
 	 */
 	function setStoreToWindow(hashtable) {
