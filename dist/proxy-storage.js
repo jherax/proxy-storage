@@ -535,7 +535,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        var index = cookie.indexOf('=');
 	        var key = cookie.substring(0, index).trim();
 	        var value = cookie.substring(index + 1).trim();
-	        api[key] = decodeURIComponent(value);
+	        if (key) api[key] = decodeURIComponent(value);
 	      });
 	    }
 	  };

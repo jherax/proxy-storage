@@ -432,7 +432,7 @@ function cookieStorage() {
         const index = cookie.indexOf('=');
         const key = cookie.substring(0, index).trim();
         const value = cookie.substring(index + 1).trim();
-        api[key] = decodeURIComponent(value);
+        if (key) api[key] = decodeURIComponent(value);
       });
     },
   };
