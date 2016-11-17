@@ -88,6 +88,27 @@ return /******/ (function(modules) { // webpackBootstrap
 	// import 'babel-polyfill';
 
 	/**
+	 * @public
+	 *
+	 * Current storage mechanism.
+	 * @type {object}
+	 */
+	var storage = null;
+
+	/**
+	 * @public
+	 *
+	 * Determines which storage mechanisms are available.
+	 *
+	 * @type {object}
+	 */
+	var isAvaliable = {
+	  localStorage: false,
+	  sessionStorage: false,
+	  cookieStorage: false,
+	  memoryStorage: true };
+
+	/**
 	 * @private
 	 *
 	 * Proxy for the default cookie storage associated with the current document.
@@ -105,6 +126,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	    document.cookie = value;
 	  }
 	};
+
+	/**
+	 * @private
+	 *
+	 * Keeps WebStorage instances by type as singletons
+	 *
+	 * @type {object}
+	 */
+	var _instances = {};
 
 	/**
 	 * @private
@@ -222,7 +252,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @Reference
 	 * https://developer.mozilla.org/en-US/docs/Web/API/Storage
 	 *
-	 * @type {Class}
+	 * @type {class}
 	 */
 
 	var WebStorage = function () {
@@ -241,6 +271,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    if (!_proxy.hasOwnProperty(storageType)) {
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
+	    // keeps instances by storageType as singletons
+	    if (_instances[storageType]) {
+	      return _instances[storageType];
+	    }
 	    setProperty(this, '__storage__', storageType);
 	    // copies all existing elements in the storage
 	    Object.keys(_proxy[storageType]).forEach(function (key) {
@@ -250,7 +284,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      } catch (e) {
 	        _this[key] = value;
 	      }
-	    });
+	    }, this);
+	    _instances[storageType] = this;
 	  }
 	  /**
 	   * Stores a value given a key name.
@@ -322,8 +357,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      executeInterceptors('clear');
 	      Object.keys(this).forEach(function (key) {
-	        return delete _this2[key];
-	      });
+	        delete _this2[key];
+	      }, this);
 	      _proxy[this.__storage__].clear();
 	    }
 	    /**
@@ -362,33 +397,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @public
 	 *
-	 * Determines which storage mechanisms are available.
-	 *
-	 * @type {object}
-	 */
-
-
-	var isAvaliable = {
-	  localStorage: false,
-	  sessionStorage: false,
-	  cookieStorage: false,
-	  memoryStorage: true
-	};
-
-	/**
-	 * @public
-	 *
-	 * Current storage mechanism.
-	 * @type {object}
-	 */
-	var storage = null;
-
-	/**
-	 * @public
-	 *
 	 * Get/Set the storage mechanism to use by default.
 	 * @type {object}
 	 */
+
+
 	var configStorage = {
 	  get: function get() {
 	    return storage.__storage__;

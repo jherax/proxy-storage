@@ -20,6 +20,28 @@
 // import 'babel-polyfill';
 
 /**
+ * @public
+ *
+ * Current storage mechanism.
+ * @type {object}
+ */
+let storage = null;
+
+/**
+ * @public
+ *
+ * Determines which storage mechanisms are available.
+ *
+ * @type {object}
+ */
+const isAvaliable = {
+  localStorage: false,
+  sessionStorage: false,
+  cookieStorage: false,
+  memoryStorage: true, // fallback storage
+};
+
+/**
  * @private
  *
  * Proxy for the default cookie storage associated with the current document.
@@ -35,6 +57,15 @@ const $cookie = {
     document.cookie = value;
   },
 };
+
+/**
+ * @private
+ *
+ * Keeps WebStorage instances by type as singletons
+ *
+ * @type {object}
+ */
+const _instances = {};
 
 /**
  * @private
@@ -146,7 +177,7 @@ function checkEmpty(key) {
  * @Reference
  * https://developer.mozilla.org/en-US/docs/Web/API/Storage
  *
- * @type {Class}
+ * @type {class}
  */
 class WebStorage {
   /**
@@ -160,7 +191,10 @@ class WebStorage {
     if (!_proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
-    // TODO: make singleton by storageType to access the same stored elements
+    // keeps instances by storageType as singletons
+    if (_instances[storageType]) {
+      return _instances[storageType];
+    }
     setProperty(this, '__storage__', storageType);
     // copies all existing elements in the storage
     Object.keys(_proxy[storageType]).forEach((key) => {
@@ -170,7 +204,8 @@ class WebStorage {
       } catch (e) {
         this[key] = value;
       }
-    });
+    }, this);
+    _instances[storageType] = this;
   }
   /**
    * Stores a value given a key name.
@@ -226,7 +261,9 @@ class WebStorage {
    */
   clear() {
     executeInterceptors('clear');
-    Object.keys(this).forEach((key) => delete this[key]);
+    Object.keys(this).forEach((key) => {
+      delete this[key];
+    }, this);
     _proxy[this.__storage__].clear();
   }
   /**
@@ -253,28 +290,6 @@ class WebStorage {
       _interceptors[command].push(action);
   }
 }
-
-/**
- * @public
- *
- * Determines which storage mechanisms are available.
- *
- * @type {object}
- */
-const isAvaliable = {
-  localStorage: false,
-  sessionStorage: false,
-  cookieStorage: false,
-  memoryStorage: true,
-};
-
-/**
- * @public
- *
- * Current storage mechanism.
- * @type {object}
- */
-let storage = null;
 
 /**
  * @public

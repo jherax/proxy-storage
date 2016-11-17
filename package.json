@@ -1,17 +1,16 @@
 {
   "name": "proxy-storage",
+  "version": "1.0.2",
   "description": "Storage mechanism that implements the Web Storage interface",
-  "version": "1.0.1",
   "author": "David Rivera <jherax@gmail.com>",
-  "src": "src/proxy-storage.js",
   "main": "dist/proxy-storage.js",
   "keywords": [
-    "javascript",
     "storage",
-    "web storage",
+    "cookie",
     "sessionStorage",
     "localStorage",
-    "cookie"
+    "web storage",
+    "javascript"
   ],
   "repository": {
     "url": "git@github.com:jherax/proxy-storage.git",
@@ -22,7 +21,7 @@
   },
   "homepage": "https://github.com/jherax/proxy-storage#readme",
   "scripts": {
-    "build": "webpack",
+    "build": "webpack --bail && webpack --config webpack.uglify.config.js",
     "eslint": "eslint src || true"
   },
   "engines": {
@@ -40,7 +39,8 @@
     "eslint": "^3.9.0",
     "eslint-config-google": "^0.7.0",
     "eslint-loader": "^1.6.1",
-    "webpack": "^1.13.3"
+    "webpack": "^1.13.3",
+    "webpack-validator": "^2.2.9"
   },
   "babel": {
     "presets": [

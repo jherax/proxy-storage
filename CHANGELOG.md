@@ -1,4 +1,8 @@
-# 1.0.1
+# 1.0.2
+
+### Improvements
+
+1. `WebStorage` instances are singletons by storage mechanism, in order to keep consistency of the data stored.
 
 ### Fixes
 
