@@ -160,6 +160,7 @@ class WebStorage {
     if (!_proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
+    // TODO: make singleton by storageType to access the same stored elements
     setProperty(this, '__storage__', storageType);
     // copies all existing elements in the storage
     Object.keys(_proxy[storageType]).forEach((key) => {

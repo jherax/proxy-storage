@@ -35,8 +35,8 @@ $ yarn add proxy-storage
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<!-- last version: 1.0.0 -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.0/dist/proxy-storage.min.js"></script>
+<!-- last version: 1.0.1 -->
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.1/dist/proxy-storage.min.js"></script>
 ``` 
 
 In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
