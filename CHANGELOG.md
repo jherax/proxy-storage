@@ -1,3 +1,9 @@
+# 1.0.3
+
+### Fixes
+
+1. Fixed [#2](https://github.com/jherax/proxy-storage/issues/2): Getting an error when retrieving nonexistent item from cookieStorage
+
 # 1.0.2
 
 ### Improvements

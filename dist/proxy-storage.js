@@ -321,9 +321,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'getItem',
 	    value: function getItem(key) {
 	      checkEmpty(key);
-	      executeInterceptors('getItem', key);
 	      var value = _proxy[this.__storage__].getItem(key);
-	      return JSON.parse(value);
+	      if (value === undefined) value = null;else value = JSON.parse(value);
+	      executeInterceptors('getItem', key, value);
+	      return value;
 	    }
 	    /**
 	     * Deletes a key from the storage.
@@ -504,7 +505,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      $cookie.set(cookie);
 	    },
 	    getItem: function getItem(key) {
-	      var value = void 0;
+	      var value = null;
 	      var nameEQ = key + '=';
 	      var cookie = $cookie.get().split(';').find(findCookie, nameEQ);
 	      if (cookie) {
@@ -559,7 +560,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      setStoreToWindow(hashtable);
 	    },
 	    getItem: function getItem(key) {
-	      return hashtable[key];
+	      var value = hashtable[key];
+	      return value === undefined ? null : value;
 	    },
 	    removeItem: function removeItem(key) {
 	      delete hashtable[key];

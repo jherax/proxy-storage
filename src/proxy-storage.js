@@ -234,9 +234,11 @@ class WebStorage {
    */
   getItem(key) {
     checkEmpty(key);
-    executeInterceptors('getItem', key);
-    const value = _proxy[this.__storage__].getItem(key);
-    return JSON.parse(value);
+    let value = _proxy[this.__storage__].getItem(key);
+    if (value === undefined) value = null;
+    else value = JSON.parse(value);
+    executeInterceptors('getItem', key, value);
+    return value;
   }
   /**
    * Deletes a key from the storage.
@@ -399,7 +401,7 @@ function cookieStorage() {
     },
 
     getItem(key) {
-      let value = void 0;
+      let value = null;
       const nameEQ = `${key}=`;
       const cookie = $cookie.get().split(';').find(findCookie, nameEQ);
       if (cookie) {
@@ -456,7 +458,8 @@ function memoryStorage() {
       setStoreToWindow(hashtable);
     },
     getItem(key) {
-      return hashtable[key];
+      const value = hashtable[key];
+      return value === undefined ? null : value;
     },
     removeItem(key) {
       delete hashtable[key];

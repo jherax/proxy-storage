@@ -35,8 +35,8 @@ $ yarn add proxy-storage
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<!-- last version: 1.0.2 -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.2/dist/proxy-storage.min.js"></script>
+<!-- last version: 1.0.3 -->
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.3/dist/proxy-storage.min.js"></script>
 ``` 
 
 In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
@@ -258,7 +258,7 @@ import storage, { WebStorage, isAvaliable } from 'proxy-storage';
 // and we have no access to default storage mechanisms
 if (!isAvaliable.localStorage && !isAvaliable.cookieStorage) {
   WebStorage.interceptors('setItem', (key, value) => console.log(`setItem: ${key}: ${value}`));
-  WebStorage.interceptors('getItem', (key) => console.log(`getItem: ${key}`));
+  WebStorage.interceptors('getItem', (key) => console.log(`setItem: ${key}: ${value}`));
   WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
 }
 
