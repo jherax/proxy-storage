@@ -250,8 +250,8 @@ class WebStorage {
    */
   removeItem(key) {
     checkEmpty(key);
-    delete this[key];
     executeInterceptors('removeItem', key);
+    delete this[key];
     _proxy[this.__storage__].removeItem(key);
   }
   /**
