@@ -258,7 +258,7 @@ import storage, { WebStorage, isAvaliable } from 'proxy-storage';
 // and we have no access to default storage mechanisms
 if (!isAvaliable.localStorage && !isAvaliable.cookieStorage) {
   WebStorage.interceptors('setItem', (key, value) => console.log(`setItem: ${key}: ${value}`));
-  WebStorage.interceptors('getItem', (key) => console.log(`setItem: ${key}: ${value}`));
+  WebStorage.interceptors('getItem', (key) => console.log(`getItem: ${key}: ${value}`));
   WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
 }
 
