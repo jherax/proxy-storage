@@ -1,24 +1,37 @@
 # Proxy Storage
 
-This library is intended to use as a proxy that implements a basic 
+This library handles an adapter that implements the 
 [Web Storage](https://developer.mozilla.org/en-US/docs/Web/API/Storage) interface, 
 which is very useful to deal with the lack of compatibility between 
 [document.cookie](https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie) and 
 [localStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage) / 
-[sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) api.
+[sessionStorage](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage) APIs.
 
-It also provides a fallback that stores the data in memory when all of above mechanisms are not available, 
-for example in some browsers when you are in private navigation. The behavior of the _`memoryStorage`_ is similar to 
+It also provides a new [`memoryStorage`](#storage-or-default) mechanism that keeps the data
+in memory even if a forced refresh is performed on the page. It could be used as a fallback
+when the other storage mechanisms are not available, for example in some browsers navigating 
+in private mode. The behavior of _`memoryStorage`_ is similar to 
 [_sessionStorage_](https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage).
 
-The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store 
-`Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
+The adapter let us to store data as **JSON**, allowing to save `Object` and 
+`Array<Any>` values, which is not possible when you are using native `localStorage`, 
 `sessionStorage` and `cookie` storages.
 
-Another plus in [`proxy-storage`](https://github.com/jherax/proxy-storage) is that you can register [interceptors](#static-methods) 
-for each of the exposed [Web Storage methods](#storage-or-default): `setItem`, `getItem`, `removeItem`, `clear` 
+Another advantage with [`proxy-storage`](https://github.com/jherax/proxy-storage) is that you can register [interceptors](#static-methods) 
+for each of the [Web Storage methods](#storage-or-default): `setItem`, `getItem`, `removeItem`, `clear` and they will intercept the values before
+being returned by the intercepted method. See documentation [here](#static-methods).
 
-## Getting started
+## Content
+
+1. [Installing the library](#installing-the-library)
+2. [Including the library](#including-the-library)
+3. [API: storage/default](#storage-or-default)
+4. [API: WebStorage](#webstorage)
+5. [API: configStorage](#configstorage)
+6. [API: isAvaliable](#isavaliable)
+7. [Running the project](#running-the-project)
+
+## Installing the library
 
 To include this library into your package manager with `npm` or `yarn`
 
@@ -35,8 +48,8 @@ $ yarn add proxy-storage
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<!-- last version: 1.0.3 -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.3/dist/proxy-storage.min.js"></script>
+<!-- last version: 1.0.4 -->
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.4/dist/proxy-storage.min.js"></script>
 ``` 
 
 In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
@@ -91,17 +104,20 @@ define(['proxy-storage'], function(proxyStorage) {
 
 # API
 
-The exposed Web Storage interface allow us saving data as **JSON**, with the advantage that you can store 
-`Object` and `Array<Any>` values, which is not possible when you are using native `localStorage`, 
-`sessionStorage` and `cookie` storages.
+The exposed Web Storage interface handles an adapter that allow us to store data as **JSON**, letting to store 
+`Object` and `Array<Any>` values. It also provides a new `memoryStorage` mechanism that keeps the data
+in memory even if a forced refresh is performed on the page.
 
-This library has been written as an **ES2015 module** and the exported API contains the following members:
+The [`WebStorage`](#webstorage) class allows you to register [`interceptors`](#static-methods) for each of the prototype
+methods: `setItem`, `getItem`, `removeItem`, `clear`, in order to allow additional actions to be performed before one of the methods finishes.
+
+This library is exported as UMD and the API contains the following members:
 
 ## storage (or default)
 
 _@type_ `Object`. This is the **default** module and is an instance of [`WebStorage`](#webstorage). 
 It saves and retrieves the data internally as JSON, which allows not only store **Primitive** values 
-but also **Object** values. It inherits the following methods in the `WebStorage` prototype:
+but also **Object** values. It inherits the following methods of the `WebStorage` prototype:
 
 - **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.<br>
   `options` is an optional parameter and only works with `cookieStorage`. See [here](#setitem-for-cookiestorage) for more details. 
@@ -148,17 +164,17 @@ data = storage.getItem('o-really');
 ### setItem for cookieStorage
 
 When you are working with an instance of `WebStorage` and set its mechanism to `"cookieStorage"`, the API method `.setItem()` 
-has a special behavior, allowing you to set an expiration date and also specifying a path where the cookie will be valid.
+has a special behavior, allowing you to set an expiration date and also to specify a path where the cookie will be valid.
 
 `setItem(key, value, options)` receives the optional parameter `options` which is an object where you can specify the following properties:
 
-* `path` `{string}`: the relative path where the cookie will be valid. Its default value is `"/"`
-* `expires` `{Date, object}`: the expiration date of the cookie. Also you can provide an object to describe the expiration date:
-  - `date`&nbsp;&nbsp;&nbsp; `{Date}`: if provided, the timestamps will affect this date, otherwise a new current date will be used.
-  - `hours`&nbsp;&nbsp;`{number}`: hours to add / subtract
-  - `days`&nbsp;&nbsp;&nbsp; `{number}`: days to add / subtract
-  - `months`&nbsp;`{number}`: months to add / subtract
-  - `years`&nbsp;&nbsp; `{number}`: years to add / subtract
+* `path`_`{string}`:_ the relative path where the cookie will be valid. Its default value is `"/"`
+* `expires`_`{Date, object}`:_ the expiration date of the cookie. Also you can provide an object to describe the expiration date:
+  - `date`_`{Date}`:_ if provided, the timestamps will affect this date, otherwise a new current date will be used.
+  - `hours`_`{number}`:_ hours to add / subtract
+  - `days`_`{number}`:_ days to add / subtract
+  - `months`_`{number}`:_ months to add / subtract
+  - `years`_`{number}`:_ years to add / subtract
 
 #### Example
 
@@ -242,28 +258,46 @@ function clearDataFromStorage() {
 
 ### Static Methods
 
-**`WebStorage`** provides the static method `interceptors` which allows us to register callbacks that runs when an API method is invoked. 
-It is very useful when you need to perform some additional actions when accessing the `WebStorage` methods.
+The **`WebStorage`** class provides the static method `interceptors` which allows us to register callbacks for each of the prototype
+methods: `setItem`, `getItem`, `removeItem`, `clear`. It is very useful when you need to perform additional actions when accessing 
+the `WebStorage` methods, or if you need to transform the _value_ in `getItem` and `setItem` methods before they are stored/retrieved 
+in the storage mechanism.
 
 - **`WebStorage.interceptors`**`(command, action)`: adds an interceptor to a `WebStorage` method. 
-  - `command` `{string}`. The name of the API method to intercept. It can be `setItem`, `getItem`, `removeItem`, `clear`
-  - `action` `{function}`. Callback executed when the API method is called.
+  - `command`_`{string}`_ Name of the API method to intercept. It can be `setItem`, `getItem`, `removeItem`, `clear`
+  - `action`_`{function}`_ Callback executed when the API method is called.
+
+**Tip**: interceptors are registered in chain, allowing the transformation in chain of the value passed through. 
 
 #### Example
 
 ```javascript
-import storage, { WebStorage, isAvaliable } from 'proxy-storage';
+import storage, { WebStorage } from 'proxy-storage';
 
-// detect if we are in a private navigation session
-// and we have no access to default storage mechanisms
-if (!isAvaliable.localStorage && !isAvaliable.cookieStorage) {
-  WebStorage.interceptors('setItem', (key, value) => console.log(`setItem: ${key}: ${value}`));
-  WebStorage.interceptors('getItem', (key) => console.log(`getItem: ${key}: ${value}`));
-  WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
-}
+// 1st interceptor for 'setItem'
+WebStorage.interceptors('setItem', (key, value) => {
+  // transform the 'id' property by encoding it to base64
+  value.id = btoa(value.id);
+  return value;
+});
 
-// memoryStorage is the fallback mechanism in 'storage'
-storage.setItem('proxy-storage-test', {data: 'it works!'});
+// 2nd interceptor for 'setItem'
+WebStorage.interceptors('setItem', (key, value) => {
+  // does not apply any transformation
+  console.info('setItem: See the localStorage in your browser');
+  console.log(`${key}: ${JSON.stringify(value)}`);
+});
+
+WebStorage.interceptors('getItem', (key, value) => {
+  // decodes from base64 the 'id' property
+  value.id = +atob(value.id);
+  return value;
+});
+
+WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
+
+// localStorage is the default storage mechanism
+storage.setItem('proxy-storage-test', {id: 1040, data: 'it works!'});
 storage.getItem('proxy-storage-test');
 ```
 

@@ -1,3 +1,9 @@
+# 1.0.4
+
+### Improvements
+
+1. Interceptors now interact with the values in the API methods `setItem` and `getItem`. Read more about [interceptors](README.md#static-methods).
+
 # 1.0.3
 
 ### Fixes

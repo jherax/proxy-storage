@@ -214,19 +214,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
-	 * Executes the interceptors of a WebStorage method
+	 * Executes the interceptors of a WebStorage method and
+	 * allows the transformation in chain of the value passed through
 	 *
 	 * @param  {string} command: name of the method to intercept
-	 * @return {void}
+	 * @return {any}
 	 */
 	function executeInterceptors(command) {
 	  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
 	    args[_key - 1] = arguments[_key];
 	  }
 
-	  _interceptors[command].forEach(function (action) {
-	    return action.apply(undefined, args);
-	  });
+	  var key = args.shift();
+	  var value = args.shift();
+	  return _interceptors[command].reduce(function (obj, action) {
+	    var transformed = action.apply(undefined, [key, obj].concat(args));
+	    if (transformed === undefined) return obj;
+	    return transformed;
+	  }, value);
 	}
 
 	/**
@@ -234,6 +239,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 *
 	 * Validates if the key is not empty.
 	 * (null, undefined or empty string)
+	 *
 	 * @param  {string} key: keyname of the storage
 	 * @return {void}
 	 */
@@ -303,8 +309,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'setItem',
 	    value: function setItem(key, value, options) {
 	      checkEmpty(key);
+	      var v = executeInterceptors('setItem', key, value, options);
+	      if (v !== undefined) value = v;
 	      this[key] = value;
-	      executeInterceptors('setItem', key, value, options);
 	      value = JSON.stringify(value);
 	      _proxy[this.__storage__].setItem(key, value, options);
 	    }
@@ -323,7 +330,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	      checkEmpty(key);
 	      var value = _proxy[this.__storage__].getItem(key);
 	      if (value === undefined) value = null;else value = JSON.parse(value);
-	      executeInterceptors('getItem', key, value);
+	      var v = executeInterceptors('getItem', key, value);
+	      if (v !== undefined) value = v;
 	      return value;
 	    }
 	    /**

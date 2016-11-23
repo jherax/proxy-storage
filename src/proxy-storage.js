@@ -145,13 +145,20 @@ const _interceptors = {
 /**
  * @private
  *
- * Executes the interceptors of a WebStorage method
+ * Executes the interceptors of a WebStorage method and
+ * allows the transformation in chain of the value passed through
  *
  * @param  {string} command: name of the method to intercept
- * @return {void}
+ * @return {any}
  */
 function executeInterceptors(command, ...args) {
-  _interceptors[command].forEach((action) => action(...args));
+  const key = args.shift();
+  const value = args.shift();
+  return _interceptors[command].reduce((obj, action) => {
+    let transformed = action(key, obj, ...args);
+    if (transformed === undefined) return obj;
+    return transformed;
+  }, value);
 }
 
 /**
@@ -159,6 +166,7 @@ function executeInterceptors(command, ...args) {
  *
  * Validates if the key is not empty.
  * (null, undefined or empty string)
+ *
  * @param  {string} key: keyname of the storage
  * @return {void}
  */
@@ -219,8 +227,9 @@ class WebStorage {
    */
   setItem(key, value, options) {
     checkEmpty(key);
+    let v = executeInterceptors('setItem', key, value, options);
+    if (v !== undefined) value = v;
     this[key] = value;
-    executeInterceptors('setItem', key, value, options);
     value = JSON.stringify(value);
     _proxy[this.__storage__].setItem(key, value, options);
   }
@@ -237,7 +246,8 @@ class WebStorage {
     let value = _proxy[this.__storage__].getItem(key);
     if (value === undefined) value = null;
     else value = JSON.parse(value);
-    executeInterceptors('getItem', key, value);
+    let v = executeInterceptors('getItem', key, value);
+    if (v !== undefined) value = v;
     return value;
   }
   /**
