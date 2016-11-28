@@ -52,22 +52,40 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports) {
+/***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+	exports.isAvaliable = exports.configStorage = exports.WebStorage = exports.default = undefined;
 
-	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+	var _webStorage = __webpack_require__(1);
 
-	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+	var _webStorage2 = _interopRequireDefault(_webStorage);
 
-	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	/* eslint-disable no-use-before-define, no-invalid-this */
+	// If you want to support all ES6 features, uncomment the next line
+	// import 'babel-polyfill';
 
+	/**
+	 * @public
+	 *
+	 * Current storage mechanism.
+	 *
+	 * @type {object}
+	 */
+	var storage = null;
+
+	/**
+	 * @public
+	 *
+	 * Determines which storage mechanisms are available.
+	 *
+	 * @type {object}
+	 */
 	/**
 	 * This library uses an adapter that implements the Web Storage interface,
 	 * which is very useful to deal with the lack of compatibility between
@@ -84,24 +102,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * https://github.com/jherax/proxy-storage.git
 	 */
 
-	// If you want to support all ES6 features, uncomment the next line
-	// import 'babel-polyfill';
-
-	/**
-	 * @public
-	 *
-	 * Current storage mechanism.
-	 * @type {object}
-	 */
-	var storage = null;
-
-	/**
-	 * @public
-	 *
-	 * Determines which storage mechanisms are available.
-	 *
-	 * @type {object}
-	 */
 	var isAvaliable = {
 	  localStorage: false,
 	  sessionStorage: false,
@@ -109,28 +109,113 @@ return /******/ (function(modules) { // webpackBootstrap
 	  memoryStorage: true };
 
 	/**
-	 * @private
+	 * @public
 	 *
-	 * Proxy for the default cookie storage associated with the current document.
-	 *
-	 * @Reference
-	 * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
+	 * Get/Set the storage mechanism to use by default.
 	 *
 	 * @type {object}
 	 */
-	var $cookie = {
+	var configStorage = {
 	  get: function get() {
-	    return document.cookie;
+	    return storage.__storage__;
 	  },
-	  set: function set(value) {
-	    document.cookie = value;
+
+
+	  /**
+	   * Sets the storage mechanism to use by default.
+	   *
+	   * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+	   * @return {void}
+	   */
+	  set: function set(storageType) {
+	    if (!_webStorage.proxy.hasOwnProperty(storageType)) {
+	      throw new Error('Storage type "' + storageType + '" is not valid');
+	    }
+	    exports.default = storage = new _webStorage2.default(storageType);
 	  }
 	};
 
 	/**
 	 * @private
 	 *
-	 * Keeps WebStorage instances by type as singletons
+	 * Checks whether a storage mechanism is available.
+	 *
+	 * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+	 * @return {boolean}
+	 */
+	function isStorageAvailable(storageType) {
+	  var storageObj = _webStorage.proxy[storageType];
+	  var data = '__proxy-storage__';
+	  try {
+	    storageObj.setItem(data, data);
+	    storageObj.removeItem(data);
+	    return true;
+	  } catch (e) {
+	    return false;
+	  }
+	}
+
+	/**
+	 * @private
+	 *
+	 * Sets the first or default storage available.
+	 *
+	 * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+	 * @return {boolean}
+	 */
+	function storageAvaliable(storageType) {
+	  if (isAvaliable[storageType]) {
+	    configStorage.set(storageType);
+	  }
+	  return isAvaliable[storageType];
+	}
+
+	/**
+	 * @private
+	 *
+	 * Initializes the module.
+	 *
+	 * @return {void}
+	 */
+	function init() {
+	  isAvaliable.localStorage = isStorageAvailable('localStorage');
+	  isAvaliable.sessionStorage = isStorageAvailable('sessionStorage');
+	  isAvaliable.cookieStorage = isStorageAvailable('cookieStorage');
+	  // sets the default storage mechanism available
+	  Object.keys(isAvaliable).some(storageAvaliable);
+	}
+
+	init();
+
+	// @public API
+	exports.default = storage;
+	exports.WebStorage = _webStorage2.default;
+	exports.configStorage = configStorage;
+	exports.isAvaliable = isAvaliable;
+
+/***/ },
+/* 1 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.proxy = exports.default = undefined;
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+	var _proxyMechanism = __webpack_require__(2);
+
+	var _utils = __webpack_require__(4);
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+	/**
+	 * @private
+	 *
+	 * Keeps WebStorage instances by type as singletons.
 	 *
 	 * @type {object}
 	 */
@@ -139,68 +224,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
-	 * Proxy for Web Storage and Cookies.
-	 * All members implement the Web Storage interface.
-	 *
-	 * @Reference
-	 * https://developer.mozilla.org/en-US/docs/Web/API/Storage
-	 *
-	 * @type {object}
-	 */
-	var _proxy = {
-	  localStorage: window.localStorage,
-	  sessionStorage: window.sessionStorage,
-	  cookieStorage: initApi(cookieStorage()),
-	  memoryStorage: initApi(memoryStorage())
-	};
-
-	/**
-	 * @private
-	 *
-	 * Adds the current elements in the storage object
-	 *
-	 * @param  {object} api: the API to initialize
-	 * @return {object}
-	 */
-	function initApi(api) {
-	  // sets read-only and non-enumerable properties
-	  for (var prop in api) {
-	    // eslint-disable-line
-	    if (prop !== 'initialize') setProperty(api, prop);
-	  }
-	  api.initialize();
-	  // this method is removed after being invoked
-	  // because is not part of the Web Storage interface
-	  delete api.initialize;
-	  return api;
-	}
-
-	/**
-	 * @private
-	 *
-	 * Creates a non-enumerable read-only property.
-	 *
-	 * @param  {object} obj: the object to add the property
-	 * @param  {string} name: the name of the property
-	 * @param  {any} value: the value of the property
-	 * @return {void}
-	 */
-	function setProperty(obj, name, value) {
-	  var descriptor = {
-	    configurable: false,
-	    enumerable: false,
-	    writable: false
-	  };
-	  if (typeof value !== 'undefined') {
-	    descriptor.value = value;
-	  }
-	  Object.defineProperty(obj, name, descriptor);
-	}
-
-	/**
-	 * @private
-	 *
-	 * Stores the interceptors for WebStorage methods
+	 * Stores the interceptors for WebStorage methods.
 	 *
 	 * @type {object}
 	 */
@@ -214,8 +238,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
-	 * Executes the interceptors of a WebStorage method and
-	 * allows the transformation in chain of the value passed through
+	 * Executes the interceptors for a WebStorage method and
+	 * allows the transformation in chain of the value passed through.
 	 *
 	 * @param  {string} command: name of the method to intercept
 	 * @return {any}
@@ -227,26 +251,11 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	  var key = args.shift();
 	  var value = args.shift();
-	  return _interceptors[command].reduce(function (obj, action) {
-	    var transformed = action.apply(undefined, [key, obj].concat(args));
-	    if (transformed === undefined) return obj;
+	  return _interceptors[command].reduce(function (val, action) {
+	    var transformed = action.apply(undefined, [key, val].concat(args));
+	    if (transformed === undefined) return val;
 	    return transformed;
 	  }, value);
-	}
-
-	/**
-	 * @private
-	 *
-	 * Validates if the key is not empty.
-	 * (null, undefined or empty string)
-	 *
-	 * @param  {string} key: keyname of the storage
-	 * @return {void}
-	 */
-	function checkEmpty(key) {
-	  if (key == null || key === '') {
-	    throw new Error('The key provided can not be empty');
-	  }
 	}
 
 	/**
@@ -255,13 +264,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Implementation of the Web Storage interface.
 	 * It saves and retrieves values as JSON.
 	 *
-	 * @Reference
+	 * @see
 	 * https://developer.mozilla.org/en-US/docs/Web/API/Storage
 	 *
 	 * @type {class}
 	 */
 
 	var WebStorage = function () {
+
 	  /**
 	   * Creates an instance of WebStorage.
 	   *
@@ -274,17 +284,17 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _classCallCheck(this, WebStorage);
 
-	    if (!_proxy.hasOwnProperty(storageType)) {
+	    if (!_proxyMechanism.proxy.hasOwnProperty(storageType)) {
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
-	    // keeps instances by storageType as singletons
+	    // keeps only one instance by storageType (singleton)
 	    if (_instances[storageType]) {
 	      return _instances[storageType];
 	    }
-	    setProperty(this, '__storage__', storageType);
-	    // copies all existing elements in the storage
-	    Object.keys(_proxy[storageType]).forEach(function (key) {
-	      var value = _proxy[storageType][key];
+	    (0, _utils.setProperty)(this, '__storage__', storageType);
+	    // copies all existing elements in the storage mechanism
+	    Object.keys(_proxyMechanism.proxy[storageType]).forEach(function (key) {
+	      var value = _proxyMechanism.proxy[storageType][key];
 	      try {
 	        _this[key] = JSON.parse(value);
 	      } catch (e) {
@@ -293,6 +303,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }, this);
 	    _instances[storageType] = this;
 	  }
+
 	  /**
 	   * Stores a value given a key name.
 	   *
@@ -308,13 +319,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(WebStorage, [{
 	    key: 'setItem',
 	    value: function setItem(key, value, options) {
-	      checkEmpty(key);
+	      (0, _utils.checkEmpty)(key);
 	      var v = executeInterceptors('setItem', key, value, options);
 	      if (v !== undefined) value = v;
 	      this[key] = value;
 	      value = JSON.stringify(value);
-	      _proxy[this.__storage__].setItem(key, value, options);
+	      _proxyMechanism.proxy[this.__storage__].setItem(key, value, options);
 	    }
+
 	    /**
 	     * Retrieves a value by its key name.
 	     *
@@ -327,13 +339,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getItem',
 	    value: function getItem(key) {
-	      checkEmpty(key);
-	      var value = _proxy[this.__storage__].getItem(key);
+	      (0, _utils.checkEmpty)(key);
+	      var value = _proxyMechanism.proxy[this.__storage__].getItem(key);
 	      if (value === undefined) value = null;else value = JSON.parse(value);
 	      var v = executeInterceptors('getItem', key, value);
 	      if (v !== undefined) value = v;
 	      return value;
 	    }
+
 	    /**
 	     * Deletes a key from the storage.
 	     *
@@ -346,11 +359,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'removeItem',
 	    value: function removeItem(key) {
-	      checkEmpty(key);
+	      (0, _utils.checkEmpty)(key);
 	      executeInterceptors('removeItem', key);
 	      delete this[key];
-	      _proxy[this.__storage__].removeItem(key);
+	      _proxyMechanism.proxy[this.__storage__].removeItem(key);
 	    }
+
 	    /**
 	     * Removes all keys from the storage.
 	     *
@@ -368,8 +382,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      Object.keys(this).forEach(function (key) {
 	        delete _this2[key];
 	      }, this);
-	      _proxy[this.__storage__].clear();
+	      _proxyMechanism.proxy[this.__storage__].clear();
 	    }
+
 	    /**
 	     * Gets the number of data items stored in the Storage object.
 	     *
@@ -383,8 +398,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    get: function get() {
 	      return Object.keys(this).length;
 	    }
+
 	    /**
-	     * Adds an interceptor to a WebStorage method
+	     * Adds an interceptor to a WebStorage method.
 	     *
 	     * @param  {string} command: name of the API method to intercept
 	     * @param  {function} action: callback executed when the API method is called
@@ -403,86 +419,128 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return WebStorage;
 	}();
 
+	// @public API
+
+
+	exports.default = WebStorage;
+	exports.proxy = _proxyMechanism.proxy;
+
+/***/ },
+/* 2 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.proxy = undefined;
+
+	var _cookieStorage = __webpack_require__(3);
+
+	var _cookieStorage2 = _interopRequireDefault(_cookieStorage);
+
+	var _memoryStorage = __webpack_require__(5);
+
+	var _memoryStorage2 = _interopRequireDefault(_memoryStorage);
+
+	var _utils = __webpack_require__(4);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	/**
+	 * @private
+	 *
+	 * Adds the current elements in the storage object.
+	 *
+	 * @param  {object} api: the storage mechanism to initialize
+	 * @return {object}
+	 */
+	function initApi(api) {
+	  if (!api.initialize) return api;
+	  // sets read-only and non-enumerable properties
+	  for (var prop in api) {
+	    // eslint-disable-line
+	    if (prop !== 'initialize') (0, _utils.setProperty)(api, prop);
+	  }
+	  api.initialize();
+	  // this method is removed after being invoked
+	  // because is not part of the Web Storage interface
+	  delete api.initialize;
+	  return api;
+	}
+
 	/**
 	 * @public
 	 *
-	 * Get/Set the storage mechanism to use by default.
+	 * Proxy for storage mechanisms.
+	 * All members implement the Web Storage interface.
+	 *
+	 * @see
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Storage
+	 *
 	 * @type {object}
 	 */
+	var proxy = exports.proxy = {
+	  localStorage: window.localStorage,
+	  sessionStorage: window.sessionStorage,
+	  cookieStorage: initApi((0, _cookieStorage2.default)()),
+	  memoryStorage: initApi((0, _memoryStorage2.default)())
+	};
 
+/***/ },
+/* 3 */
+/***/ function(module, exports, __webpack_require__) {
 
-	var configStorage = {
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.default = cookieStorage;
+
+	var _utils = __webpack_require__(4);
+
+	/**
+	 * @private
+	 *
+	 * Proxy for the default cookie storage associated with the current document.
+	 *
+	 * @see
+	 * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
+	 *
+	 * @type {object}
+	 */
+	var $cookie = {
 	  get: function get() {
-	    return storage.__storage__;
+	    return document.cookie;
 	  },
-
-
-	  /**
-	   * Sets the storage mechanism to use by default.
-	   * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
-	   * @return {void}
-	   */
-	  set: function set(storageType) {
-	    if (!_proxy.hasOwnProperty(storageType)) {
-	      throw new Error('Storage type "' + storageType + '" is not valid');
-	    }
-	    exports.default = storage = new WebStorage(storageType);
+	  set: function set(value) {
+	    document.cookie = value;
 	  }
 	};
 
 	/**
 	 * @private
 	 *
-	 * Determines whether a value is a plain object
+	 * Builds the expiration part for the cookie.
 	 *
-	 * @param  {any} value: the object to test
-	 * @return {boolean}
-	 */
-	function isObject(value) {
-	  return Object.prototype.toString.call(value) === '[object Object]';
-	}
-
-	/**
-	 * @private
+	 * @see utils.setTimestamp(options)
 	 *
-	 * Allows add or subtract timestamps to the current date or to a specific date.
-	 * @param  {object} options: It contains the timestamps to add or remove to the date, and have the following properties:
-	 *         - {Date} date: if provided, the timestamps will affect this date, otherwise a new current date will be used.
-	 *         - {number} hours: hours to add/subtract
-	 *         - {number} days: days to add/subtract
-	 *         - {number} months: months to add/subtract
-	 *         - {number} years: years to add/subtract
-	 * @return {Date}
-	 */
-	function setTimestamp() {
-	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-	  var opt = Object.assign({}, options);
-	  var d = opt.date instanceof Date ? opt.date : new Date();
-	  if (+opt.hours) d.setHours(d.getHours() + opt.hours);
-	  if (+opt.days) d.setDate(d.getDate() + opt.days);
-	  if (+opt.months) d.setMonth(d.getMonth() + opt.months);
-	  if (+opt.years) d.setFullYear(d.getFullYear() + opt.years);
-	  return d;
-	}
-
-	/**
-	 * @private
-	 *
-	 * Builds the expiration part for the cookie
-	 *
-	 * @param  {Date|object} date: the expiration date. See `setTimestamp(options)`
+	 * @param  {Date|object} date: the expiration date
 	 * @return {string}
 	 */
+	/* eslint-disable no-invalid-this */
 	function buildExpirationString(date) {
-	  var expires = date instanceof Date ? setTimestamp({ date: date }) : setTimestamp(date);
+	  var expires = date instanceof Date ? (0, _utils.setTimestamp)({ date: date }) : (0, _utils.setTimestamp)(date);
 	  return '; expires=' + expires.toUTCString();
 	}
 
 	/**
 	 * @private
 	 *
-	 * Callback that finds an element in the array.
+	 * Finds an element in the array.
+	 *
 	 * @param  {string} cookie: key=value
 	 * @return {boolean}
 	 */
@@ -493,10 +551,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
-	 * @private
+	 * @public
 	 *
-	 * Manages actions for creation/reading/deleting cookies.
-	 * Implements Web Storage interface methods.
+	 * Create, read, and delete elements from document cookies
+	 * and implements the Web Storage interface.
 	 *
 	 * @return {object}
 	 */
@@ -506,7 +564,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var expires = '',
 	          cookie = void 0;
 	      options = Object.assign({ path: '/' }, options);
-	      if (isObject(options.expires) || options.expires instanceof Date) {
+	      if ((0, _utils.isObject)(options.expires) || options.expires instanceof Date) {
 	        expires = buildExpirationString(options.expires);
 	      }
 	      cookie = key + '=' + encodeURIComponent(value) + expires + '; path=' + options.path;
@@ -539,11 +597,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	        }
 	      });
 	    },
+
+
+	    // this method will be removed after being invoked
+	    // because is not part of the Web Storage interface
 	    initialize: function initialize() {
 	      $cookie.get().split(';').forEach(function (cookie) {
 	        var index = cookie.indexOf('=');
 	        var key = cookie.substring(0, index).trim();
 	        var value = cookie.substring(index + 1).trim();
+	        // copies all existing elements in the storage
 	        if (key) api[key] = decodeURIComponent(value);
 	      });
 	    }
@@ -551,12 +614,133 @@ return /******/ (function(modules) { // webpackBootstrap
 	  return api;
 	}
 
+/***/ },
+/* 4 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	exports.isObject = isObject;
+	exports.setTimestamp = setTimestamp;
+	exports.setProperty = setProperty;
+	exports.checkEmpty = checkEmpty;
+	/**
+	 * Determines whether a value is a plain object.
+	 *
+	 * @param  {any} value: the object to test
+	 * @return {boolean}
+	 */
+	function isObject(value) {
+	  return Object.prototype.toString.call(value) === '[object Object]';
+	}
+
+	/**
+	 * Allows add or subtract timestamps to the current date or to a specific date.
+	 *
+	 * @param  {object} options: It contains the timestamps to add or remove to the date, and have the following properties:
+	 *         - {Date} date: if provided, the timestamps will affect this date, otherwise a new current date will be used.
+	 *         - {number} hours: hours to add/subtract
+	 *         - {number} days: days to add/subtract
+	 *         - {number} months: months to add/subtract
+	 *         - {number} years: years to add/subtract
+	 * @return {Date}
+	 */
+	function setTimestamp() {
+	  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+	  var opt = Object.assign({}, options);
+	  var d = opt.date instanceof Date ? opt.date : new Date();
+	  if (+opt.hours) d.setHours(d.getHours() + opt.hours);
+	  if (+opt.days) d.setDate(d.getDate() + opt.days);
+	  if (+opt.months) d.setMonth(d.getMonth() + opt.months);
+	  if (+opt.years) d.setFullYear(d.getFullYear() + opt.years);
+	  return d;
+	}
+
+	/**
+	 * Creates a non-enumerable read-only property.
+	 *
+	 * @param  {object} obj: the object to add the property
+	 * @param  {string} name: the name of the property
+	 * @param  {any} value: the value of the property
+	 * @return {void}
+	 */
+	function setProperty(obj, name, value) {
+	  var descriptor = {
+	    configurable: false,
+	    enumerable: false,
+	    writable: false
+	  };
+	  if (typeof value !== 'undefined') {
+	    descriptor.value = value;
+	  }
+	  Object.defineProperty(obj, name, descriptor);
+	}
+
+	/**
+	 * Validates if the key is not empty.
+	 * (null, undefined either empty string)
+	 *
+	 * @param  {string} key: keyname of an element in the storage mechanism
+	 * @return {void}
+	 */
+	function checkEmpty(key) {
+	  if (key == null || key === '') {
+	    throw new Error('The key provided can not be empty');
+	  }
+	}
+
+/***/ },
+/* 5 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+	exports.default = memoryStorage;
 	/**
 	 * @private
 	 *
-	 * Manages actions for creation/reading/deleting data in memory.
-	 * Implements Web Storage interface methods.
-	 * It also adds a hack to persist the store as a session in the current window.
+	 * Gets the hashtable-store from the current window.
+	 *
+	 * @return {object}
+	 */
+	function getStoreFromWindow() {
+	  try {
+	    var store = JSON.parse(window.self.name);
+	    if (store && (typeof store === 'undefined' ? 'undefined' : _typeof(store)) === 'object') return store;
+	  } catch (e) {
+	    return {};
+	  }
+	}
+
+	/**
+	 * @private
+	 *
+	 * Saves the hashtable-store in the current window.
+	 *
+	 * @param  {object} hashtable: {key,value} pairs stored in memoryStorage
+	 * @return {void}
+	 */
+	function setStoreToWindow(hashtable) {
+	  var store = JSON.stringify(hashtable);
+	  window.self.name = store;
+	}
+
+	/**
+	 * @public
+	 *
+	 * Create, read, and delete elements from memory store and
+	 * implements the Web Storage interface. It also adds a hack
+	 * to persist the store in session for the current browser-tab.
 	 *
 	 * @return {object}
 	 */
@@ -581,94 +765,16 @@ return /******/ (function(modules) { // webpackBootstrap
 	      });
 	      setStoreToWindow(hashtable);
 	    },
+
+	    // this method will be removed after being invoked
+	    // because is not part of the Web Storage interface
 	    initialize: function initialize() {
+	      // copies all existing elements in the storage
 	      Object.assign(api, hashtable);
 	    }
 	  };
 	  return api;
 	}
-
-	/**
-	 * @private
-	 *
-	 * Gets the hashtable-store from the current window.
-	 * @return {object}
-	 */
-	function getStoreFromWindow() {
-	  try {
-	    var store = JSON.parse(window.self.name);
-	    if (store && (typeof store === 'undefined' ? 'undefined' : _typeof(store)) === 'object') return store;
-	  } catch (e) {
-	    return {};
-	  }
-	}
-
-	/**
-	 * @private
-	 *
-	 * Saves the hashtable-store in the current window.
-	 * @param  {object} hashtable: {key,value} pairs stored in memoryStorage
-	 * @return {void}
-	 */
-	function setStoreToWindow(hashtable) {
-	  var store = JSON.stringify(hashtable);
-	  window.self.name = store;
-	}
-
-	/**
-	 * @private
-	 *
-	 * Checks whether a storage mechanism is available.
-	 * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
-	 * @return {boolean}
-	 */
-	function isStorageAvailable(storageType) {
-	  var storageObj = _proxy[storageType];
-	  var data = '__proxy-storage__';
-	  try {
-	    storageObj.setItem(data, data);
-	    storageObj.removeItem(data);
-	    return true;
-	  } catch (e) {
-	    return false;
-	  }
-	}
-
-	/**
-	 * @private
-	 *
-	 * Sets the default storage mechanism available.
-	 * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
-	 * @return {boolean}
-	 */
-	function storageAvaliable(storageType) {
-	  if (isAvaliable[storageType]) {
-	    configStorage.set(storageType);
-	  }
-	  return isAvaliable[storageType];
-	}
-
-	/**
-	 * @private
-	 *
-	 * Initializes the module.
-	 * @return {void}
-	 */
-	function init() {
-	  isAvaliable.localStorage = isStorageAvailable('localStorage');
-	  isAvaliable.sessionStorage = isStorageAvailable('sessionStorage');
-	  isAvaliable.cookieStorage = isStorageAvailable('cookieStorage');
-	  // sets the default storage mechanism available
-	  Object.keys(isAvaliable).some(storageAvaliable);
-	}
-
-	init();
-
-	// @public API
-	exports.default = storage;
-	exports.WebStorage = WebStorage;
-	exports.configStorage = configStorage;
-	exports.isAvaliable = isAvaliable;
 
 /***/ }
 /******/ ])

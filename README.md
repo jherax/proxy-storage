@@ -29,7 +29,8 @@ being returned by the intercepted method. See documentation [here](#static-metho
 4. [API: WebStorage](#webstorage)
 5. [API: configStorage](#configstorage)
 6. [API: isAvaliable](#isavaliable)
-7. [Running the project](#running-the-project)
+7. [Shimming](#shimming)
+8. [Running the project](#running-the-project)
 
 ## Installing the library
 
@@ -276,8 +277,10 @@ import storage, { WebStorage } from 'proxy-storage';
 
 // 1st interceptor for 'setItem'
 WebStorage.interceptors('setItem', (key, value) => {
-  // transform the 'id' property by encoding it to base64
-  value.id = btoa(value.id);
+  if (key === 'storage-test') {
+    // transform the 'id' property by encoding it to base64
+    value.id = btoa(value.id);
+  }
   return value;
 });
 
@@ -289,16 +292,18 @@ WebStorage.interceptors('setItem', (key, value) => {
 });
 
 WebStorage.interceptors('getItem', (key, value) => {
-  // decodes from base64 the 'id' property
-  value.id = +atob(value.id);
+  if (key === 'storage-test') {
+    // decodes from base64 the 'id' property
+    value.id = +atob(value.id);
+  }
   return value;
 });
 
 WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
 
 // localStorage is the default storage mechanism
-storage.setItem('proxy-storage-test', {id: 1040, data: 'it works!'});
-storage.getItem('proxy-storage-test');
+storage.setItem('storage-test', {id: 1040, data: 'it works!'});
+storage.getItem('storage-test');
 ```
 
 ## configStorage
@@ -356,7 +361,7 @@ function init() {
 
   storage.setItem('hidden-data', {
     mechanism: 'memoryStorage',
-    availability: 'Browser-tab, you can refresh your window'
+    availability: 'Current page: you can refresh your window'
   });
 
   let data = storage.getItem('hidden-data');
@@ -364,8 +369,20 @@ function init() {
 }
 
 function isSafariInPrivateMode(flags) {
-  return !flags.localStorage && !flags.sessionStorage && !flags.cookieStorage;
+  return !flags.localStorage && !flags.sessionStorage;
 }
+```
+
+## Shimming
+
+In some cases may occur in old browsers that after including the library, you could get error messages, e.g.<br>
+`TypeError: undefined is not a function (evaluating 'Object.assign(t,e)')`
+
+The reason is because this library use some of the new features in ES5-ES6. To overcome this problem, you may
+include in your project the [es6-shim](https://github.com/paulmillr/es6-shim) script before all scripts.
+
+```html
+<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.1/es6-shim.min.js"></script>
 ```
 
 ## Running the project

@@ -1,14 +1,15 @@
 {
   "name": "proxy-storage",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Storage mechanism that implements the Web Storage interface",
   "author": "David Rivera <jherax@gmail.com>",
   "main": "dist/proxy-storage.js",
   "keywords": [
     "storage",
     "cookie",
-    "sessionStorage",
     "localStorage",
+    "sessionStorage",
+    "memoryStorage",
     "web storage",
     "javascript"
   ],

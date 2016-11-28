@@ -6,7 +6,6 @@ const validate = require('webpack-validator');
 const PATHS = require('./webpack.constants');
 
 const config = {
-  // multi-entries: http://ow.ly/PNXR3063UHP
   entry: {
     'proxy-storage': PATHS.jsSource,
   },
