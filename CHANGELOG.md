@@ -1,3 +1,14 @@
+# 2.0.0
+
+### Breaking changes
+
+This version bumps to major because the old method `.isAvaliable` is renamed to `.isAvailable`
+
+### Improvements
+
+1. Validates the availability of the storage mechanism when a new instance is created. 
+If the requested storage is not available, then the first available storage is used.
+
 # 1.0.4
 
 ### Improvements

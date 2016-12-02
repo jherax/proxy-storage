@@ -14,7 +14,8 @@
  * https://github.com/jherax/proxy-storage.git
  */
 
-import WebStorage, {proxy} from './web-storage';
+import WebStorage, {proxy, webStorageSettings} from './web-storage';
+import {isAvailable} from './is-available';
 
 // If you want to support all ES6 features, uncomment the next line
 // import 'babel-polyfill';
@@ -27,20 +28,6 @@ import WebStorage, {proxy} from './web-storage';
  * @type {object}
  */
 let storage = null;
-
-/**
- * @public
- *
- * Determines which storage mechanisms are available.
- *
- * @type {object}
- */
-const isAvaliable = {
-  localStorage: false,
-  sessionStorage: false,
-  cookieStorage: false,
-  memoryStorage: true, // fallback storage
-};
 
 /**
  * @public
@@ -96,11 +83,12 @@ function isStorageAvailable(storageType) {
  * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
  * @return {boolean}
  */
-function storageAvaliable(storageType) {
-  if (isAvaliable[storageType]) {
+function storageAvailable(storageType) {
+  if (isAvailable[storageType]) {
+    webStorageSettings.default = storageType;
     configStorage.set(storageType);
   }
-  return isAvaliable[storageType];
+  return isAvailable[storageType];
 }
 
 /**
@@ -111,14 +99,15 @@ function storageAvaliable(storageType) {
  * @return {void}
  */
 function init() {
-  isAvaliable.localStorage = isStorageAvailable('localStorage');
-  isAvaliable.sessionStorage = isStorageAvailable('sessionStorage');
-  isAvaliable.cookieStorage = isStorageAvailable('cookieStorage');
+  isAvailable.localStorage = isStorageAvailable('localStorage');
+  isAvailable.sessionStorage = isStorageAvailable('sessionStorage');
+  isAvailable.cookieStorage = isStorageAvailable('cookieStorage');
+  webStorageSettings.isAvailable = isAvailable;
   // sets the default storage mechanism available
-  Object.keys(isAvaliable).some(storageAvaliable);
+  Object.keys(isAvailable).some(storageAvailable);
 }
 
 init();
 
 // @public API
-export {storage as default, WebStorage, configStorage, isAvaliable};
+export {storage as default, WebStorage, configStorage, isAvailable};

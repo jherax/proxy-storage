@@ -59,11 +59,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.isAvaliable = exports.configStorage = exports.WebStorage = exports.default = undefined;
+	exports.isAvailable = exports.configStorage = exports.WebStorage = exports.default = undefined;
 
 	var _webStorage = __webpack_require__(1);
 
 	var _webStorage2 = _interopRequireDefault(_webStorage);
+
+	var _isAvailable = __webpack_require__(6);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -74,15 +76,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @public
 	 *
 	 * Current storage mechanism.
-	 *
-	 * @type {object}
-	 */
-	var storage = null;
-
-	/**
-	 * @public
-	 *
-	 * Determines which storage mechanisms are available.
 	 *
 	 * @type {object}
 	 */
@@ -102,11 +95,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * https://github.com/jherax/proxy-storage.git
 	 */
 
-	var isAvaliable = {
-	  localStorage: false,
-	  sessionStorage: false,
-	  cookieStorage: false,
-	  memoryStorage: true };
+	var storage = null;
 
 	/**
 	 * @public
@@ -163,11 +152,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
 	 * @return {boolean}
 	 */
-	function storageAvaliable(storageType) {
-	  if (isAvaliable[storageType]) {
+	function storageAvailable(storageType) {
+	  if (_isAvailable.isAvailable[storageType]) {
+	    _webStorage.webStorageSettings.default = storageType;
 	    configStorage.set(storageType);
 	  }
-	  return isAvaliable[storageType];
+	  return _isAvailable.isAvailable[storageType];
 	}
 
 	/**
@@ -178,11 +168,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @return {void}
 	 */
 	function init() {
-	  isAvaliable.localStorage = isStorageAvailable('localStorage');
-	  isAvaliable.sessionStorage = isStorageAvailable('sessionStorage');
-	  isAvaliable.cookieStorage = isStorageAvailable('cookieStorage');
+	  _isAvailable.isAvailable.localStorage = isStorageAvailable('localStorage');
+	  _isAvailable.isAvailable.sessionStorage = isStorageAvailable('sessionStorage');
+	  _isAvailable.isAvailable.cookieStorage = isStorageAvailable('cookieStorage');
+	  _webStorage.webStorageSettings.isAvailable = _isAvailable.isAvailable;
 	  // sets the default storage mechanism available
-	  Object.keys(isAvaliable).some(storageAvaliable);
+	  Object.keys(_isAvailable.isAvailable).some(storageAvailable);
 	}
 
 	init();
@@ -191,7 +182,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	exports.default = storage;
 	exports.WebStorage = _webStorage2.default;
 	exports.configStorage = configStorage;
-	exports.isAvaliable = isAvaliable;
+	exports.isAvailable = _isAvailable.isAvailable;
 
 /***/ },
 /* 1 */
@@ -202,13 +193,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
-	exports.proxy = exports.default = undefined;
+	exports.proxy = exports.webStorageSettings = exports.default = undefined;
 
 	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 	var _proxyMechanism = __webpack_require__(2);
 
 	var _utils = __webpack_require__(4);
+
+	var _isAvailable = __webpack_require__(6);
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -259,6 +252,52 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	/**
+	 * @private
+	 *
+	 * Copies all existing keys in the WebStorage instance.
+	 *
+	 * @param  {WebStorage} instance: the instance to where copy the keys
+	 * @param  {object} storage: the storage mechanism
+	 * @return {void}
+	 */
+	function copyKeys(instance, storage) {
+	  Object.keys(storage).forEach(function (key) {
+	    var value = storage[key];
+	    try {
+	      instance[key] = JSON.parse(value);
+	    } catch (e) {
+	      instance[key] = value;
+	    }
+	  });
+	}
+
+	/**
+	 * @public
+	 *
+	 * Allows to validate if a storage mechanism is valid
+	 *
+	 * @type {object}
+	 */
+	var webStorageSettings = {
+	  default: null,
+	  isAvailable: _isAvailable.isAvailable
+	};
+
+	/**
+	 * @private
+	 *
+	 * Validates if the storage mechanism is available and can be used safely.
+	 *
+	 * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+	 * @return {string}
+	 */
+	function storageAvailable(storageType) {
+	  if (webStorageSettings.isAvailable[storageType]) return storageType;
+	  console.warn(storageType + ' is not available. Falling back to ' + webStorageSettings.default); // eslint-disable-line
+	  return webStorageSettings.default;
+	}
+
+	/**
 	 * @public
 	 *
 	 * Implementation of the Web Storage interface.
@@ -280,27 +319,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	   * @memberOf WebStorage
 	   */
 	  function WebStorage(storageType) {
-	    var _this = this;
-
 	    _classCallCheck(this, WebStorage);
 
 	    if (!_proxyMechanism.proxy.hasOwnProperty(storageType)) {
 	      throw new Error('Storage type "' + storageType + '" is not valid');
 	    }
+	    // gets the requested storage mechanism
+	    var storage = _proxyMechanism.proxy[storageType];
+	    // if the storage is not available, sets the default
+	    storageType = storageAvailable(storageType);
 	    // keeps only one instance by storageType (singleton)
-	    if (_instances[storageType]) {
-	      return _instances[storageType];
+	    var cachedInstance = _instances[storageType];
+	    if (cachedInstance) {
+	      copyKeys(cachedInstance, storage);
+	      return cachedInstance;
 	    }
 	    (0, _utils.setProperty)(this, '__storage__', storageType);
-	    // copies all existing elements in the storage mechanism
-	    Object.keys(_proxyMechanism.proxy[storageType]).forEach(function (key) {
-	      var value = _proxyMechanism.proxy[storageType][key];
-	      try {
-	        _this[key] = JSON.parse(value);
-	      } catch (e) {
-	        _this[key] = value;
-	      }
-	    }, this);
+	    // copies all existing keys in the storage mechanism
+	    copyKeys(this, storage);
 	    _instances[storageType] = this;
 	  }
 
@@ -376,11 +412,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'clear',
 	    value: function clear() {
-	      var _this2 = this;
+	      var _this = this;
 
 	      executeInterceptors('clear');
 	      Object.keys(this).forEach(function (key) {
-	        delete _this2[key];
+	        delete _this[key];
 	      }, this);
 	      _proxyMechanism.proxy[this.__storage__].clear();
 	    }
@@ -423,6 +459,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	exports.default = WebStorage;
+	exports.webStorageSettings = webStorageSettings;
 	exports.proxy = _proxyMechanism.proxy;
 
 /***/ },
@@ -775,6 +812,28 @@ return /******/ (function(modules) { // webpackBootstrap
 	  };
 	  return api;
 	}
+
+/***/ },
+/* 6 */
+/***/ function(module, exports) {
+
+	"use strict";
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+	/**
+	 * @public
+	 *
+	 * Used to determine which storage mechanisms are available.
+	 *
+	 * @type {object}
+	 */
+	var isAvailable = exports.isAvailable = {
+	  localStorage: false,
+	  sessionStorage: false,
+	  cookieStorage: false,
+	  memoryStorage: true };
 
 /***/ }
 /******/ ])

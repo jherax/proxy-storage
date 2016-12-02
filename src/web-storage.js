@@ -1,5 +1,6 @@
 import {proxy} from './proxy-mechanism';
 import {setProperty, checkEmpty} from './utils';
+import {isAvailable} from './is-available';
 
 /**
  * @private
@@ -44,6 +45,52 @@ function executeInterceptors(command, ...args) {
 }
 
 /**
+ * @private
+ *
+ * Copies all existing keys in the WebStorage instance.
+ *
+ * @param  {WebStorage} instance: the instance to where copy the keys
+ * @param  {object} storage: the storage mechanism
+ * @return {void}
+ */
+function copyKeys(instance, storage) {
+  Object.keys(storage).forEach((key) => {
+    let value = storage[key];
+    try {
+      instance[key] = JSON.parse(value);
+    } catch (e) {
+      instance[key] = value;
+    }
+  });
+}
+
+/**
+ * @public
+ *
+ * Allows to validate if a storage mechanism is valid
+ *
+ * @type {object}
+ */
+const webStorageSettings = {
+  default: null,
+  isAvailable,
+};
+
+/**
+ * @private
+ *
+ * Validates if the storage mechanism is available and can be used safely.
+ *
+ * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+ * @return {string}
+ */
+function storageAvailable(storageType) {
+  if (webStorageSettings.isAvailable[storageType]) return storageType;
+  console.warn(`${storageType} is not available. Falling back to ${webStorageSettings.default}`); // eslint-disable-line
+  return webStorageSettings.default;
+}
+
+/**
  * @public
  *
  * Implementation of the Web Storage interface.
@@ -67,20 +114,19 @@ class WebStorage {
     if (!proxy.hasOwnProperty(storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
+    // gets the requested storage mechanism
+    const storage = proxy[storageType];
+    // if the storage is not available, sets the default
+    storageType = storageAvailable(storageType);
     // keeps only one instance by storageType (singleton)
-    if (_instances[storageType]) {
-      return _instances[storageType];
+    const cachedInstance = _instances[storageType];
+    if (cachedInstance) {
+      copyKeys(cachedInstance, storage);
+      return cachedInstance;
     }
     setProperty(this, '__storage__', storageType);
-    // copies all existing elements in the storage mechanism
-    Object.keys(proxy[storageType]).forEach((key) => {
-      let value = proxy[storageType][key];
-      try {
-        this[key] = JSON.parse(value);
-      } catch (e) {
-        this[key] = value;
-      }
-    }, this);
+    // copies all existing keys in the storage mechanism
+    copyKeys(this, storage);
     _instances[storageType] = this;
   }
 
@@ -178,4 +224,4 @@ class WebStorage {
 }
 
 // @public API
-export {WebStorage as default, proxy};
+export {WebStorage as default, webStorageSettings, proxy};

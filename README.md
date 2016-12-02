@@ -28,7 +28,7 @@ being returned by the intercepted method. See documentation [here](#static-metho
 3. [API: storage/default](#storage-or-default)
 4. [API: WebStorage](#webstorage)
 5. [API: configStorage](#configstorage)
-6. [API: isAvaliable](#isavaliable)
+6. [API: isAvailable](#isavailable)
 7. [Shimming](#shimming)
 8. [Running the project](#running-the-project)
 
@@ -49,8 +49,8 @@ $ yarn add proxy-storage
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<!-- last version: 1.0.4 -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/1.0.4/dist/proxy-storage.min.js"></script>
+<!-- last version: 2.0.0 -->
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.0.0/dist/proxy-storage.min.js"></script>
 ``` 
 
 In the above case, the [library](#api) is included into the namespace `proxyStorage` as a global object.
@@ -136,7 +136,7 @@ The availability is determined in the following order:
 4. **`memoryStorage`**: internal storage mechanism that can be used as a **fallback** when none of the above mechanisms are available. 
 The behavior of _`memoryStorage`_ is similar to _`sessionStorage`_
 
-**Note**: you can override the default storage mechanism by setting the new storage type with [configStorage.set()](#configstorage)
+**TIP**: you can override the default storage mechanism by setting the new storage type with [configStorage.set()](#configstorage)
 
 #### Example
 
@@ -183,18 +183,18 @@ has a special behavior, allowing you to set an expiration date and also to speci
 import { WebStorage } from 'proxy-storage';
 
 const cookieStore = new WebStorage('cookieStorage');
-const data = {
+let data = {
   start: new Date().toISOString(),
   sessionId: 'J34H5J34609-DSFG7BND98W3',
   platform: 'Linux x86_64',
 };
-const options = {
+let options = {
   path: '/jherax',
-  expires: { hours: 6 }
+  expires: new Date('2017/03/06')
 };
 
 cookieStore.setItem('activity', data, options);
-cookieStore.setItem('valid', true, {expires: new Date('2017/01/02')});
+cookieStore.setItem('testing', true, { expires: {hours:1} });
 ```
 
 ### Getting all items stored
@@ -257,6 +257,27 @@ function clearDataFromStorage() {
 }
 ```
 
+**NOTE**: If you request a new instance of a storage mechanism that are not available, then you will get an instance
+of the first storage mechanism available, allowing you to keep saving data to the store. This is useful when you are relying
+on a specific storage mechanism. Let's see an example:
+
+```javascript
+import storage, * as proxyStorage from 'proxy-storage';
+
+ // let's suppose sessionStorage is not available
+ proxyStorage.isAvailable.sessionStorage = false;
+
+ // saves data to the default storage mechanism (localStorage)
+ storage.setItem('querty', 12345);
+
+ const session = new proxyStorage.WebStorage('sessionStorage');
+ session.setItem('asdfg', 67890);
+
+ // as sessionStorage is not available, the instance obtained
+ // is the first available storage mechanism: localStorage
+ console.log(session);
+```
+
 ### Static Methods
 
 The **`WebStorage`** class provides the static method `interceptors` which allows us to register callbacks for each of the prototype
@@ -268,7 +289,7 @@ in the storage mechanism.
   - `command`_`{string}`_ Name of the API method to intercept. It can be `setItem`, `getItem`, `removeItem`, `clear`
   - `action`_`{function}`_ Callback executed when the API method is called.
 
-**Tip**: interceptors are registered in chain, allowing the transformation in chain of the value passed through. 
+**TIP**: interceptors are registered in chain, allowing the transformation in chain of the value passed through. 
 
 #### Example
 
@@ -302,7 +323,7 @@ WebStorage.interceptors('getItem', (key, value) => {
 WebStorage.interceptors('removeItem', (key) => console.log(`removeItem: ${key}`));
 
 // localStorage is the default storage mechanism
-storage.setItem('storage-test', {id: 1040, data: 'it works!'});
+storage.setItem('storage-test', { id: 1040, data: 'it works!' });
 storage.getItem('storage-test');
 ```
 
@@ -326,14 +347,14 @@ console.log('Default:', storageName);
 storage.setItem('defaultStorage', storageName);
 
 // sets the new default storage mechanism
-configStorage.set('sessionStorage');
+configStorage.set('cookieStorage');
 storageName = configStorage.get();
 console.log('Current:', storageName);
 
 storage.setItem('currentStorage', storageName);
 ```
 
-## isAvaliable
+## isAvailable
 
 _@type_ `Object`. Determines which storage mechanisms are available. It contains the following flags:
 
@@ -348,29 +369,23 @@ _@type_ `Object`. Determines which storage mechanisms are available. It contains
 import storage, * as proxyStorage from 'proxy-storage';
 // * imports the entire module's members into proxyStorage.
 
-console.info('Available storage mechanisms');
-console.log(proxyStorage.isAvaliable);
+const flags = proxyStorage.isAvailable;
 
-function init() {
-  // memoryStorage is always available
+if (!flags.localStorage && !flags.sessionStorage) {
+  // forces the storage mechanism to memoryStorage
   proxyStorage.configStorage.set('memoryStorage');
+}
 
-  if (isSafariInPrivateMode(proxyStorage.isAvaliable)) {
-    // do something additional...
-  }
+let data = storage.getItem('hidden-data');
 
+if (!data) {
   storage.setItem('hidden-data', {
     mechanism: 'memoryStorage',
-    availability: 'Current page: you can refresh your window'
+    availability: 'Current page: you can refresh the page, data still remain'
   });
-
-  let data = storage.getItem('hidden-data');
-  console.log('in memoryStorage', data);
 }
 
-function isSafariInPrivateMode(flags) {
-  return !flags.localStorage && !flags.sessionStorage;
-}
+console.log('in memoryStorage', data);
 ```
 
 ## Shimming
