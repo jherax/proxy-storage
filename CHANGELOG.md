@@ -1,3 +1,9 @@
+# 2.0.1
+
+### Fixes
+
+1. Fixed [#3](https://github.com/jherax/proxy-storage/issues/3): Error trying to get an item from storage.
+
 # 2.0.0
 
 ### Breaking changes
