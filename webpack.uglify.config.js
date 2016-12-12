@@ -23,7 +23,7 @@ const config = {
       compress: {
         dead_code: true,
         drop_debugger: true,
-        drop_console: true,
+        drop_console: false,
       },
       mangle: {
         except: ['WebStorage'],

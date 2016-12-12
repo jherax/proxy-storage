@@ -173,8 +173,10 @@ class WebStorage {
   getItem(key) {
     checkEmpty(key);
     let value = proxy[this.__storage__].getItem(key);
-    if (value === undefined) value = null;
-    else {
+    if (value === undefined) {
+      delete this[key];
+      value = null;
+    } else {
       value = tryParse(value);
       this[key] = value;
     }

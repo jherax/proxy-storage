@@ -254,6 +254,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	/**
 	 * @private
 	 *
+	 * Try to parse a value
+	 *
+	 * @param  {string} value: the value to parse
+	 * @return {any}
+	 */
+	function tryParse(value) {
+	  var parsed = void 0;
+	  try {
+	    parsed = JSON.parse(value);
+	  } catch (e) {
+	    parsed = value;
+	  }
+	  return parsed;
+	}
+
+	/**
+	 * @private
+	 *
 	 * Copies all existing keys in the WebStorage instance.
 	 *
 	 * @param  {WebStorage} instance: the instance to where copy the keys
@@ -262,12 +280,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 	function copyKeys(instance, storage) {
 	  Object.keys(storage).forEach(function (key) {
-	    var value = storage[key];
-	    try {
-	      instance[key] = JSON.parse(value);
-	    } catch (e) {
-	      instance[key] = value;
-	    }
+	    instance[key] = tryParse(storage[key]);
 	  });
 	}
 
@@ -377,7 +390,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function getItem(key) {
 	      (0, _utils.checkEmpty)(key);
 	      var value = _proxyMechanism.proxy[this.__storage__].getItem(key);
-	      if (value === undefined) value = null;else value = JSON.parse(value);
+	      if (value === undefined) {
+	        delete this[key];
+	        value = null;
+	      } else {
+	        value = tryParse(value);
+	        this[key] = value;
+	      }
 	      var v = executeInterceptors('getItem', key, value);
 	      if (v !== undefined) value = v;
 	      return value;
