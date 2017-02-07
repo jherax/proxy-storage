@@ -1,10 +1,16 @@
-# 2.0.1
+# ProxyStorage
+
+<!-- markdownlint-disable MD024 MD033 -->
+
+## 2.0.1
 
 ### Fixes
 
-1. Fixed [#3](https://github.com/jherax/proxy-storage/issues/3): Error trying to get an item from storage.
+1. [#3](https://github.com/jherax/proxy-storage/issues/3): Error trying to get an item from storage.
 
-# 2.0.0
+---
+
+## 2.0.0
 
 ### Breaking changes
 
@@ -12,22 +18,27 @@ This version bumps to major because the old method `.isAvaliable` is renamed to 
 
 ### Improvements
 
-1. Validates the availability of the storage mechanism when a new instance is created. 
-If the requested storage is not available, then the first available storage is used.
+1. Validates the availability of the storage mechanism when a new instance is created. If the requested storage is not available, then the first available storage is used.
 
-# 1.0.4
+---
+
+## 1.0.4
 
 ### Improvements
 
 1. Interceptors now interact with the values in the API methods `setItem` and `getItem`. Read more about [interceptors](README.md#static-methods).
 
-# 1.0.3
+---
+
+## 1.0.3
 
 ### Fixes
 
-1. Fixed [#2](https://github.com/jherax/proxy-storage/issues/2): Getting an error when retrieving nonexistent item from `cookieStorage`
+1. [#2](https://github.com/jherax/proxy-storage/issues/2): Getting an error when retrieving nonexistent item from `cookieStorage`
 
-# 1.0.2
+---
+
+## 1.0.2
 
 ### Improvements
 
@@ -35,9 +46,11 @@ If the requested storage is not available, then the first available storage is u
 
 ### Fixes
 
-1. Fixed [#1](https://github.com/jherax/proxy-storage/issues/1): Storages have no existing elements when they are instantiated the first time
+1. [#1](https://github.com/jherax/proxy-storage/issues/1): Storages have no existing elements when they are instantiated the first time.
 
-# 1.0.0
+---
+
+## 1.0.0
 
 ### Features
 
@@ -48,35 +61,41 @@ If the requested storage is not available, then the first available storage is u
 The method `setItem` has changed its signature when the storage mechanism is set to `"cookieStorage"`
 <br/>See more documentation [here](README.md#setitem-for-cookiestorage).
 
-**New signature**
+#### New signature
 
 ```javascript
 setItem (key {string}, value {any}, options {object});
 ```
 
-**Old signature**
+#### Old signature
 
 ```javascript
 setItem (key {string}, value {any}, expires {number}, path {string});
 ```
 
-# 0.3.0
+---
+
+## 0.3.0
 
 ### Features
 
 1. Added the static method `WebStorage.interceptors()`
 
-# 0.2.0
+---
+
+## 0.2.0
 
 ### Improvements
 
-1. Added `eslint-config-google`
-2. Added `eslint-loader` to webpack
-3. Added `clean-webpack-plugin` to webpack
+1. Added `eslint-config-google`.
+1. Added `eslint-loader` to webpack.
+1. Added `clean-webpack-plugin` to webpack.
 
-# 0.1.0
+---
+
+## 0.1.0
 
 ### Improvements
 
 1. Added webpack as module bundler
-2. Webpack outputs the library as UMD module (global: `proxyStorage`)
+1. Webpack outputs the library as UMD module (global: `proxyStorage`)
