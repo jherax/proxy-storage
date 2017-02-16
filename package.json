@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/jherax/proxy-storage#readme",
   "scripts": {
-    "build": "webpack --bail && webpack --config webpack.uglify.config.js",
+    "build": "webpack --bail && webpack --config webpack/uglify.js",
     "eslint": "eslint src || true"
   },
   "engines": {
