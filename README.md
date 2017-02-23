@@ -53,12 +53,10 @@ $ yarn add proxy-storage
 `proxy-storage` can be included directly from a CDN in your page:
 
 ```html
-<!-- last version: 2.0.1 -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.0.1/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.0.2/dist/proxy-storage.min.js"></script>
 ```
 
-In the above case, the [library](#api) is included into the namespace
-`proxyStorage`as a global object.
+In the above case, [`proxyStorage`](#api) is included as a global object in the browser.
 
 ```javascript
 // get the default storage mechanism
@@ -111,7 +109,7 @@ require(['proxy-storage'], function(proxyStorage) {
 });
 ```
 
-See an example with RequireJS here: http://jsfiddle.net/FdKTn/65/
+See an example with RequireJS here: http://jsfiddle.net/FdKTn/67/
 
 # API
 
@@ -436,7 +434,8 @@ If you want to fork or build your own, you must run this project.
 
 ### Requirements
 
-1. Git ([git-linux](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) or [git-windows](https://git-for-windows.github.io/)).
+1. Git ([git-linux](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
+   or [git-windows](https://git-for-windows.github.io/)).
 1. [Node.js](https://nodejs.org/en/) (latest stable version v6+).<br>
    It is preferable install **[nvm](https://github.com/creationix/nvm)**
    (Node Version Manager).
@@ -450,7 +449,7 @@ If you are running Windows, you can install
 Follow every step mentioned
 [here](https://github.com/coreybutler/nvm-windows#installation--upgrades)
 so that nvm will be correctly installed to manage multiple installations
-of node.js (with npm) on a Windows computer.
+of **node.js** (with **npm**) on a Windows computer.
 
 ### Building the project
 
@@ -478,11 +477,7 @@ And finally execute the webpack task:
 $ yarn run build
 ```
 
-This command will lint the code with
-[ESLint](http://eslint.org/docs/user-guide/getting-started) and after that
-it will transpile with [Babel](https://babeljs.io/) the ES2015 Module in
-`src/` folder to an UMD ES5 Module in `dist/` and finally it will generate
-the minified and source map files.
+This command will lint the code with [ESLint](http://eslint.org/docs/user-guide/getting-started) and transpile the source files from `src/` to `dist/` as an [UMD](http://davidbcalhoun.com/2014/what-is-amd-commonjs-and-umd/) with [Babel](https://babeljs.io/). It also generates the minified and source map files.
 
 ## Versioning
 

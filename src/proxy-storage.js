@@ -15,7 +15,7 @@
  */
 
 import WebStorage, {proxy, webStorageSettings} from './web-storage';
-import {isAvailable} from './is-available';
+import {isAvailable} from './is-available'; // eslint-disable-line
 
 // If you want to support all ES6 features, uncomment the next line
 // import 'babel-polyfill';
@@ -48,7 +48,7 @@ const configStorage = {
    * @return {void}
    */
   set(storageType) {
-    if (!proxy.hasOwnProperty(storageType)) {
+    if (!Object.prototype.hasOwnProperty.call(proxy, storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
     storage = new WebStorage(storageType);

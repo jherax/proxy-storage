@@ -1,17 +1,15 @@
-const path = require('path');
+const {resolve} = require('path');
 
-const dist = path.resolve(__dirname, '../dist');
-const source = path.resolve(__dirname, '../src');
-const jsSource = path.resolve(source, 'proxy-storage.js');
-const jsDist = path.resolve(dist, 'proxy-storage.js');
+const dist = resolve(__dirname, '../dist');
+const source = resolve(__dirname, '../src');
 
 module.exports = {
+  project: resolve(__dirname, '../'),
   dist: {
     folder: dist,
-    js: jsDist,
   },
   source: {
     folder: source,
-    js: jsSource,
+    js: resolve(source, 'proxy-storage.js'),
   },
 };

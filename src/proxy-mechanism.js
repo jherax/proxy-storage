@@ -14,8 +14,9 @@ function initApi(api) {
   if (!api.initialize) return api;
   // sets read-only and non-enumerable properties
   for (let prop in api) { // eslint-disable-line
-    if (prop !== 'initialize')
+    if (prop !== 'initialize') {
       setProperty(api, prop);
+    }
   }
   api.initialize();
   // this method is removed after being invoked

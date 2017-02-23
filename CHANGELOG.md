@@ -2,6 +2,14 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.0.2
+
+### Improvements
+
+1. Project migrated to Webpack 2.
+
+---
+
 ## 2.0.1
 
 ### Fixes
