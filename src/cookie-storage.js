@@ -29,7 +29,7 @@ const $cookie = {
  * @return {string}
  */
 function buildExpirationString(date) {
-  let expires = (date instanceof Date ?
+  const expires = (date instanceof Date ?
     setTimestamp({date}) :
     setTimestamp(date)
   );
@@ -61,12 +61,12 @@ function findCookie(cookie) {
 export default function cookieStorage() {
   const api = {
     setItem(key, value, options) {
-      let expires = '', cookie;
+      let expires = '';
       options = Object.assign({path: '/'}, options);
       if (isObject(options.expires) || options.expires instanceof Date) {
         expires = buildExpirationString(options.expires);
       }
-      cookie = `${key}=${encodeURIComponent(value)}${expires}; path=${options.path}`;
+      const cookie = `${key}=${encodeURIComponent(value)}${expires}; path=${options.path}`;
       $cookie.set(cookie);
     },
 
@@ -88,7 +88,8 @@ export default function cookieStorage() {
 
     clear() {
       const eq = '=';
-      let indexEQ, key;
+      let key,
+        indexEQ;
       $cookie.get().split(';').forEach((cookie) => {
         indexEQ = cookie.indexOf(eq);
         if (indexEQ > -1) {

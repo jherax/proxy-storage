@@ -21,7 +21,7 @@ export function isObject(value) {
  */
 export function setTimestamp(options = {}) {
   const opt = Object.assign({}, options);
-  let d = opt.date instanceof Date ? opt.date : new Date();
+  const d = opt.date instanceof Date ? opt.date : new Date();
   if (+opt.hours) d.setHours(d.getHours() + opt.hours);
   if (+opt.days) d.setDate(d.getDate() + opt.days);
   if (+opt.months) d.setMonth(d.getMonth() + opt.months);
@@ -38,7 +38,7 @@ export function setTimestamp(options = {}) {
  * @return {void}
  */
 export function setProperty(obj, name, value) {
-  let descriptor = {
+  const descriptor = {
     configurable: false,
     enumerable: false,
     writable: false,

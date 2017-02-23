@@ -5,7 +5,7 @@
  *
  * @return {object}
  */
-function getStoreFromWindow() {
+function getStoreFromWindow() { // eslint-disable-line
   try {
     const store = JSON.parse(window.self.name);
     if (store && typeof store === 'object') return store;
@@ -52,7 +52,7 @@ export default function memoryStorage() {
       setStoreToWindow(hashtable);
     },
     clear() {
-      Object.keys(hashtable).forEach((key) => delete hashtable[key]);
+      Object.keys(hashtable).forEach(key => delete hashtable[key]);
       setStoreToWindow(hashtable);
     },
     // this method will be removed after being invoked

@@ -38,7 +38,7 @@ function executeInterceptors(command, ...args) {
   const key = args.shift();
   const value = args.shift();
   return _interceptors[command].reduce((val, action) => {
-    let transformed = action(key, val, ...args);
+    const transformed = action(key, val, ...args);
     if (transformed === undefined) return val;
     return transformed;
   }, value);
@@ -124,7 +124,7 @@ class WebStorage {
    * @memberOf WebStorage
    */
   constructor(storageType) {
-    if (!proxy.hasOwnProperty(storageType)) {
+    if (!Object.prototype.hasOwnProperty.call(proxy, storageType)) {
       throw new Error(`Storage type "${storageType}" is not valid`);
     }
     // gets the requested storage mechanism
@@ -155,7 +155,7 @@ class WebStorage {
    */
   setItem(key, value, options) {
     checkEmpty(key);
-    let v = executeInterceptors('setItem', key, value, options);
+    const v = executeInterceptors('setItem', key, value, options);
     if (v !== undefined) value = v;
     this[key] = value;
     value = JSON.stringify(value);
@@ -180,7 +180,7 @@ class WebStorage {
       value = tryParse(value);
       this[key] = value;
     }
-    let v = executeInterceptors('getItem', key, value);
+    const v = executeInterceptors('getItem', key, value);
     if (v !== undefined) value = v;
     return value;
   }
@@ -236,8 +236,9 @@ class WebStorage {
    * @memberOf WebStorage
    */
   static interceptors(command, action) {
-    if (command in _interceptors && typeof action === 'function')
+    if (command in _interceptors && typeof action === 'function') {
       _interceptors[command].push(action);
+    }
   }
 }
 
