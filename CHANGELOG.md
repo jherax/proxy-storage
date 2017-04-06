@@ -2,6 +2,14 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.1.0
+
+### Features
+
+1. Added the `domain` to the `cookieStorage` options.
+
+---
+
 ## 2.0.2
 
 ### Improvements

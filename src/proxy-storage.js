@@ -15,7 +15,7 @@
  */
 
 import WebStorage, {proxy, webStorageSettings} from './web-storage';
-import {isAvailable} from './is-available'; // eslint-disable-line
+import {isAvailable} from './is-available';
 
 // If you want to support all ES6 features, uncomment the next line
 // import 'babel-polyfill';

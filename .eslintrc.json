@@ -47,7 +47,7 @@
     "no-underscore-dangle": 0,
     "object-curly-spacing": [2, "never"],
     "import/no-mutable-exports": 1,
-    "import/prefer-default-export": 1,
+    "import/prefer-default-export": 0,
     "import/no-extraneous-dependencies": [
       "error", { "devDependencies": true }
     ]

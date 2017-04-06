@@ -36,7 +36,11 @@ const _interceptors = {
  */
 function executeInterceptors(command, ...args) {
   const key = args.shift();
-  const value = args.shift();
+  let value = args.shift();
+  if (value && typeof value === 'object') {
+    // clone the object to prevent mutations
+    value = JSON.parse(JSON.stringify(value));
+  }
   return _interceptors[command].reduce((val, action) => {
     const transformed = action(key, val, ...args);
     if (transformed === undefined) return val;
@@ -173,7 +177,7 @@ class WebStorage {
   getItem(key) {
     checkEmpty(key);
     let value = proxy[this.__storage__].getItem(key);
-    if (value === undefined) {
+    if (value == null) {
       delete this[key];
       value = null;
     } else {

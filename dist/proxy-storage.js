@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.0.2. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.1.0. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -88,7 +88,7 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.isObject = isObject;
-exports.setTimestamp = setTimestamp;
+exports.alterDate = alterDate;
 exports.setProperty = setProperty;
 exports.checkEmpty = checkEmpty;
 /**
@@ -102,21 +102,25 @@ function isObject(value) {
 }
 
 /**
- * Allows add or subtract timestamps to the current date or to a specific date.
+ * Adds or subtracts date portions to the given date and returns the new date.
  *
- * @param  {object} options: It contains the timestamps to add or remove to the date, and have the following properties:
- *         - {Date} date: if provided, the timestamps will affect this date, otherwise a new current date will be used.
+ * @see https://gist.github.com/jherax/bbc43e479a492cc9cbfc7ccc20c53cd2
+ *
+ * @param  {object} options: It contains the date parts to add or remove, and can have the following properties:
+ *         - {Date} date: if provided, this date will be affected, otherwise the current date will be used.
+ *         - {number} minutes: minutes to add/subtract
  *         - {number} hours: hours to add/subtract
  *         - {number} days: days to add/subtract
  *         - {number} months: months to add/subtract
  *         - {number} years: years to add/subtract
  * @return {Date}
  */
-function setTimestamp() {
+function alterDate() {
   var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
   var opt = Object.assign({}, options);
   var d = opt.date instanceof Date ? opt.date : new Date();
+  if (+opt.minutes) d.setMinutes(d.getMinutes() + opt.minutes);
   if (+opt.hours) d.setHours(d.getHours() + opt.hours);
   if (+opt.days) d.setDate(d.getDate() + opt.days);
   if (+opt.months) d.setMonth(d.getMonth() + opt.months);
@@ -194,6 +198,8 @@ exports.proxy = exports.webStorageSettings = exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
 var _proxyMechanism = __webpack_require__(5);
 
 var _utils = __webpack_require__(0);
@@ -241,6 +247,10 @@ function executeInterceptors(command) {
 
   var key = args.shift();
   var value = args.shift();
+  if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
+    // clone the object to prevent mutations
+    value = JSON.parse(JSON.stringify(value));
+  }
   return _interceptors[command].reduce(function (val, action) {
     var transformed = action.apply(undefined, [key, val].concat(args));
     if (transformed === undefined) return val;
@@ -387,7 +397,7 @@ var WebStorage = function () {
     value: function getItem(key) {
       (0, _utils.checkEmpty)(key);
       var value = _proxyMechanism.proxy[this.__storage__].getItem(key);
-      if (value === undefined) {
+      if (value == null) {
         delete this[key];
         value = null;
       } else {
@@ -518,14 +528,14 @@ var $cookie = {
  *
  * Builds the expiration part for the cookie.
  *
- * @see utils.setTimestamp(options)
+ * @see utils.alterDate(options)
  *
  * @param  {Date|object} date: the expiration date
  * @return {string}
  */
 /* eslint-disable no-invalid-this */
 function buildExpirationString(date) {
-  var expires = date instanceof Date ? (0, _utils.setTimestamp)({ date: date }) : (0, _utils.setTimestamp)(date);
+  var expires = date instanceof Date ? (0, _utils.alterDate)({ date: date }) : (0, _utils.alterDate)(date);
   return '; expires=' + expires.toUTCString();
 }
 
@@ -554,13 +564,24 @@ function findCookie(cookie) {
 function cookieStorage() {
   var api = {
     setItem: function setItem(key, value, options) {
-      var expires = '';
+      var domain = '',
+          expires = '';
       options = Object.assign({ path: '/' }, options);
       if ((0, _utils.isObject)(options.expires) || options.expires instanceof Date) {
         expires = buildExpirationString(options.expires);
       }
-      var cookie = key + '=' + encodeURIComponent(value) + expires + '; path=' + options.path;
+      // http://stackoverflow.com/a/5671466/2247494
+      if (typeof options.domain === 'string') {
+        domain = '; domain=' + options.domain.trim();
+      }
+      var cookie = key + '=' + encodeURIComponent(value) + expires + domain + '; path=' + options.path;
+      // TODO: add metadata to store options for the cookie
+      // TODO: remove cookies are failing when domain or path were set
+      // TODO: prevent adding cookies when the domain or path are not valid
+      // TODO: remove expired cookies through getItem or setTimeout for expires
+      // console.log('before set', $cookie.get()); // eslint-disable-line
       $cookie.set(cookie);
+      // console.log('after set', $cookie.get()); // eslint-disable-line
     },
     getItem: function getItem(key) {
       var value = null;
@@ -776,8 +797,6 @@ var _webStorage2 = _interopRequireDefault(_webStorage);
 var _isAvailable = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// eslint-disable-line
 
 // If you want to support all ES6 features, uncomment the next line
 // import 'babel-polyfill';

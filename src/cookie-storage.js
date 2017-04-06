@@ -1,5 +1,5 @@
 /* eslint-disable no-invalid-this */
-import {setTimestamp, isObject} from './utils';
+import {alterDate, isObject} from './utils';
 
 /**
  * @private
@@ -23,15 +23,15 @@ const $cookie = {
  *
  * Builds the expiration part for the cookie.
  *
- * @see utils.setTimestamp(options)
+ * @see utils.alterDate(options)
  *
  * @param  {Date|object} date: the expiration date
  * @return {string}
  */
 function buildExpirationString(date) {
   const expires = (date instanceof Date ?
-    setTimestamp({date}) :
-    setTimestamp(date)
+    alterDate({date}) :
+    alterDate(date)
   );
   return `; expires=${expires.toUTCString()}`;
 }
@@ -61,13 +61,24 @@ function findCookie(cookie) {
 export default function cookieStorage() {
   const api = {
     setItem(key, value, options) {
-      let expires = '';
+      let domain = '',
+        expires = '';
       options = Object.assign({path: '/'}, options);
       if (isObject(options.expires) || options.expires instanceof Date) {
         expires = buildExpirationString(options.expires);
       }
-      const cookie = `${key}=${encodeURIComponent(value)}${expires}; path=${options.path}`;
+      // http://stackoverflow.com/a/5671466/2247494
+      if (typeof options.domain === 'string') {
+        domain = `; domain=${options.domain.trim()}`;
+      }
+      const cookie = `${key}=${encodeURIComponent(value)}${expires}${domain}; path=${options.path}`;
+      // TODO: add metadata to store options for the cookie
+      // TODO: remove cookies are failing when domain or path were set
+      // TODO: prevent adding cookies when the domain or path are not valid
+      // TODO: remove expired cookies through getItem or setTimeout for expires
+      // console.log('before set', $cookie.get()); // eslint-disable-line
       $cookie.set(cookie);
+      // console.log('after set', $cookie.get()); // eslint-disable-line
     },
 
     getItem(key) {
