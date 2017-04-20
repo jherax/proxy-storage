@@ -59,7 +59,7 @@ $ yarn add proxy-storage
 <script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.0/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.1/dist/proxy-storage.min.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -339,10 +339,37 @@ cookieStore.setItem('testing3', 3, {
 });
 ```
 
+**Important**: Take into account that if you want to modify or remove a cookie
+that was created with a specific `path` or `domain` / subdomain, you need to
+explicitate the domain attribute in `setItem(key, value, options)`.
+
+![cookies](https://www.dropbox.com/s/wlvgm0t8xc07me1/cookies-metadata.gif?dl=1)
+
+If you have created the cookie with **proxyStorage**, it will handle the
+metadata internally, so that you can call `removeItem(key)` safely.
+
+But if you want to modify / remove a cookie that was created from another page,
+then you should provide the metadata as `path` or `domain` in order to match
+the right cookie:
+
+```javascript
+// change the value of an external cookie in /answers
+cookieStore.setItem('landedAnswers', 999, {
+  path: '/answers',
+});
+
+// remove an external cookie in a subdomain
+cookieStore.setItem('optimizelyEndUserId', '', {
+  domain: '.healthcare.org',
+  expires: {days: -1}, // trick!
+});
+```
+
 ### Looping the storage
 
 You can loop over the items in the storage instance, e.g.
-`localStorage`, `sessionStorage`, `cookieStorage`, or `memoryStorage`.
+`localStorage`, `sessionStorage`, `cookieStorage`, or `memoryStorage`,
+but it is not a good practice, see the notes below.
 
 ```javascript
 const sessionStore = new WebStorage('sessionStorage');
@@ -359,6 +386,23 @@ Object.keys(sessionStore).forEach((key) => {
 for (let key in sessionStore) {
   console.log(key, sessionStore[key]);
 }
+```
+
+**Important**: Although you can loop over the storage items, it is
+recommended to use the API methods instead, this is because navigable
+items in the storage instance are not synchronized for external changes,
+e.g. a domain cookie was created from another page, or a cookie has expired.
+
+```javascript
+// not recommended, they are not synchronized
+var title = cookieStorage['title'];
+var session = cookieStorage.sessionId;
+cookieStorage['sessionId'] = 'E6URTG5';
+
+// the good way, it tracks external changes
+var title = cookieStorage.getItem('title');
+var session = cookieStorage.getItem('sessionId');
+cookieStorage.setItem('sessionId', 'E6URTG5');
 ```
 
 ### Clearing data

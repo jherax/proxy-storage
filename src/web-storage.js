@@ -43,7 +43,7 @@ function executeInterceptors(command, ...args) {
   }
   return _interceptors[command].reduce((val, action) => {
     const transformed = action(key, val, ...args);
-    if (transformed === undefined) return val;
+    if (transformed == null) return val;
     return transformed;
   }, value);
 }
@@ -162,7 +162,10 @@ class WebStorage {
     const v = executeInterceptors('setItem', key, value, options);
     if (v !== undefined) value = v;
     this[key] = value;
-    value = JSON.stringify(value);
+    // prevents converting strings to JSON to avoid extra quotes
+    if (typeof value !== 'string') value = JSON.stringify(value);
+    // TODO: should add setTimeout for options.expires?
+    // TODO: prevent adding cookies when the domain or path are not valid?
     proxy[this.__storage__].setItem(key, value, options);
   }
 

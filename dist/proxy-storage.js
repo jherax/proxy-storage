@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.1.0. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.1.1. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -253,7 +253,7 @@ function executeInterceptors(command) {
   }
   return _interceptors[command].reduce(function (val, action) {
     var transformed = action.apply(undefined, [key, val].concat(args));
-    if (transformed === undefined) return val;
+    if (transformed == null) return val;
     return transformed;
   }, value);
 }
@@ -379,7 +379,10 @@ var WebStorage = function () {
       var v = executeInterceptors('setItem', key, value, options);
       if (v !== undefined) value = v;
       this[key] = value;
-      value = JSON.stringify(value);
+      // prevents converting strings to JSON to avoid extra quotes
+      if (typeof value !== 'string') value = JSON.stringify(value);
+      // TODO: should add setTimeout for options.expires?
+      // TODO: prevent adding cookies when the domain or path are not valid?
       _proxyMechanism.proxy[this.__storage__].setItem(key, value, options);
     }
 
@@ -520,8 +523,8 @@ var $cookie = {
   },
   set: function set(value) {
     document.cookie = value;
-  }
-};
+  },
+  data: {} };
 
 /**
  * @private
@@ -536,8 +539,14 @@ var $cookie = {
 /* eslint-disable no-invalid-this */
 function buildExpirationString(date) {
   var expires = date instanceof Date ? (0, _utils.alterDate)({ date: date }) : (0, _utils.alterDate)(date);
-  return '; expires=' + expires.toUTCString();
+  return expires.toUTCString();
 }
+
+// @private
+var buildStringFor = function buildStringFor(key, data) {
+  if (!data[key]) return '';
+  return '; ' + key + '=' + data[key];
+};
 
 /**
  * @private
@@ -564,24 +573,21 @@ function findCookie(cookie) {
 function cookieStorage() {
   var api = {
     setItem: function setItem(key, value, options) {
-      var domain = '',
-          expires = '';
       options = Object.assign({ path: '/' }, options);
+      // keep track of the metadata associated to the cookie
+      $cookie.data[key] = { path: options.path };
+      var metadata = $cookie.data[key];
       if ((0, _utils.isObject)(options.expires) || options.expires instanceof Date) {
-        expires = buildExpirationString(options.expires);
+        metadata.expires = buildExpirationString(options.expires);
       }
-      // http://stackoverflow.com/a/5671466/2247494
-      if (typeof options.domain === 'string') {
-        domain = '; domain=' + options.domain.trim();
+      if (options.domain && typeof options.domain === 'string') {
+        metadata.domain = options.domain.trim();
       }
-      var cookie = key + '=' + encodeURIComponent(value) + expires + domain + '; path=' + options.path;
-      // TODO: add metadata to store options for the cookie
-      // TODO: remove cookies are failing when domain or path were set
-      // TODO: prevent adding cookies when the domain or path are not valid
-      // TODO: remove expired cookies through getItem or setTimeout for expires
-      // console.log('before set', $cookie.get()); // eslint-disable-line
+      var expires = buildStringFor('expires', metadata);
+      var domain = buildStringFor('domain', metadata);
+      var path = buildStringFor('path', metadata);
+      var cookie = key + '=' + encodeURIComponent(value) + expires + domain + path;
       $cookie.set(cookie);
-      // console.log('after set', $cookie.get()); // eslint-disable-line
     },
     getItem: function getItem(key) {
       var value = null;
@@ -592,17 +598,20 @@ function cookieStorage() {
         value = cookie.trim().substring(nameEQ.length, cookie.length);
         value = decodeURIComponent(value);
       }
+      if (value === null) delete $cookie.data[key];
       return value;
     },
     removeItem: function removeItem(key) {
-      api.setItem(key, '', { expires: { days: -1 } });
+      var metadata = Object.assign({}, $cookie.data[key]);
+      metadata.expires = { days: -1 };
+      api.setItem(key, '', metadata);
+      delete $cookie.data[key];
     },
     clear: function clear() {
-      var eq = '=';
       var key = void 0,
-          indexEQ = void 0;
+          indexEQ = void 0; // eslint-disable-line
       $cookie.get().split(';').forEach(function (cookie) {
-        indexEQ = cookie.indexOf(eq);
+        indexEQ = cookie.indexOf('=');
         if (indexEQ > -1) {
           key = cookie.substring(0, indexEQ);
           // prevent leading spaces before the key

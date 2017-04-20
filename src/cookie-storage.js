@@ -16,6 +16,7 @@ const $cookie = {
   set: (value) => {
     document.cookie = value;
   },
+  data: {}, // metadata associated to the cookies
 };
 
 /**
@@ -33,8 +34,14 @@ function buildExpirationString(date) {
     alterDate({date}) :
     alterDate(date)
   );
-  return `; expires=${expires.toUTCString()}`;
+  return expires.toUTCString();
 }
+
+// @private
+const buildStringFor = (key, data) => {
+  if (!data[key]) return '';
+  return `; ${key}=${data[key]}`;
+};
 
 /**
  * @private
@@ -61,24 +68,21 @@ function findCookie(cookie) {
 export default function cookieStorage() {
   const api = {
     setItem(key, value, options) {
-      let domain = '',
-        expires = '';
       options = Object.assign({path: '/'}, options);
+      // keep track of the metadata associated to the cookie
+      $cookie.data[key] = {path: options.path};
+      const metadata = $cookie.data[key];
       if (isObject(options.expires) || options.expires instanceof Date) {
-        expires = buildExpirationString(options.expires);
+        metadata.expires = buildExpirationString(options.expires);
       }
-      // http://stackoverflow.com/a/5671466/2247494
-      if (typeof options.domain === 'string') {
-        domain = `; domain=${options.domain.trim()}`;
+      if (options.domain && typeof options.domain === 'string') {
+        metadata.domain = options.domain.trim();
       }
-      const cookie = `${key}=${encodeURIComponent(value)}${expires}${domain}; path=${options.path}`;
-      // TODO: add metadata to store options for the cookie
-      // TODO: remove cookies are failing when domain or path were set
-      // TODO: prevent adding cookies when the domain or path are not valid
-      // TODO: remove expired cookies through getItem or setTimeout for expires
-      // console.log('before set', $cookie.get()); // eslint-disable-line
+      const expires = buildStringFor('expires', metadata);
+      const domain = buildStringFor('domain', metadata);
+      const path = buildStringFor('path', metadata);
+      const cookie = `${key}=${encodeURIComponent(value)}${expires}${domain}${path}`;
       $cookie.set(cookie);
-      // console.log('after set', $cookie.get()); // eslint-disable-line
     },
 
     getItem(key) {
@@ -90,19 +94,21 @@ export default function cookieStorage() {
         value = cookie.trim().substring(nameEQ.length, cookie.length);
         value = decodeURIComponent(value);
       }
+      if (value === null) delete $cookie.data[key];
       return value;
     },
 
     removeItem(key) {
-      api.setItem(key, '', {expires: {days: -1}});
+      const metadata = Object.assign({}, $cookie.data[key]);
+      metadata.expires = {days: -1};
+      api.setItem(key, '', metadata);
+      delete $cookie.data[key];
     },
 
     clear() {
-      const eq = '=';
-      let key,
-        indexEQ;
+      let key, indexEQ; // eslint-disable-line
       $cookie.get().split(';').forEach((cookie) => {
-        indexEQ = cookie.indexOf(eq);
+        indexEQ = cookie.indexOf('=');
         if (indexEQ > -1) {
           key = cookie.substring(0, indexEQ);
           // prevent leading spaces before the key

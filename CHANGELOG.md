@@ -2,6 +2,16 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.1.1
+
+### Fixes
+
+1. [#4](https://github.com/jherax/proxy-storage/issues/4):
+   Removing cookies are failing when the domain or path were set in the cookie.
+1. `setItem`: prevents converting strings values to JSON to avoid extra quotes.
+
+---
+
 ## 2.1.0
 
 ### Features
