@@ -55,7 +55,7 @@ export function setProperty(obj, name, value) {
 
 /**
  * Validates if the key is not empty.
- * (null, undefined either empty string)
+ * (null, undefined or empty string)
  *
  * @param  {string} key: keyname of an element in the storage mechanism
  * @return {void}

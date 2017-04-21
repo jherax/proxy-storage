@@ -2,12 +2,21 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.1.2
+
+### Improvements
+
+1. Added the `options` parameter to the API method `removeItem()`, in order to allow passing metadata to the cookie to delete.
+   When using `"cookieStorage"` the new signature is: `instance.removeItem(key, options)`
+1. Checks if the cookie was created on `setItem()`, or delete it if the domain or path are not valid.
+
+---
+
 ## 2.1.1
 
 ### Fixes
 
-1. [#4](https://github.com/jherax/proxy-storage/issues/4):
-   Removing cookies are failing when the domain or path were set in the cookie.
+1. [#4](https://github.com/jherax/proxy-storage/issues/4): Removing cookies are failing when the `domain` or `path` were set in the cookie.
 1. `setItem`: prevents converting strings values to JSON to avoid extra quotes.
 
 ---

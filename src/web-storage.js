@@ -28,6 +28,15 @@ const _interceptors = {
 /**
  * @private
  *
+ * Keys not allowed for cookies.
+ *
+ * @type {RegExp}
+ */
+const bannedKeys = /^(?:expires|max-age|path|domain|secure)$/i;
+
+/**
+ * @private
+ *
  * Executes the interceptors for a WebStorage method and
  * allows the transformation in chain of the value passed through.
  *
@@ -159,14 +168,20 @@ class WebStorage {
    */
   setItem(key, value, options) {
     checkEmpty(key);
+    const storageType = this.__storage__;
+    if (storageType === 'cookieStorage' && bannedKeys.test(key)) {
+      throw new Error('The key is a reserved word, therefore not allowed');
+    }
     const v = executeInterceptors('setItem', key, value, options);
     if (v !== undefined) value = v;
     this[key] = value;
     // prevents converting strings to JSON to avoid extra quotes
     if (typeof value !== 'string') value = JSON.stringify(value);
-    // TODO: should add setTimeout for options.expires?
-    // TODO: prevent adding cookies when the domain or path are not valid?
-    proxy[this.__storage__].setItem(key, value, options);
+    proxy[storageType].setItem(key, value, options);
+    // checks if the cookie was created, or delete it if the domain or path are not valid
+    if (storageType === 'cookieStorage' && proxy[storageType].getItem(key) === null) {
+      delete this[key];
+    }
   }
 
   /**
@@ -196,15 +211,16 @@ class WebStorage {
    * Deletes a key from the storage.
    *
    * @param  {string} key: keyname of the storage
+   * @param  {object} options: additional options for cookieStorage
    * @return {void}
    *
    * @memberOf WebStorage
    */
-  removeItem(key) {
+  removeItem(key, options) {
     checkEmpty(key);
-    executeInterceptors('removeItem', key);
+    executeInterceptors('removeItem', key, options);
     delete this[key];
-    proxy[this.__storage__].removeItem(key);
+    proxy[this.__storage__].removeItem(key, options);
   }
 
   /**

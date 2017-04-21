@@ -37,11 +37,19 @@ function buildExpirationString(date) {
   return expires.toUTCString();
 }
 
-// @private
-const buildStringFor = (key, data) => {
+/**
+ * @private
+ *
+ * Builds the string for the cookie's metadata.
+ *
+ * @param  {string} key: name of the metadata
+ * @param  {object} data: metadata of the cookie
+ * @return {string}
+ */
+function buildMetadataFor(key, data) {
   if (!data[key]) return '';
   return `; ${key}=${data[key]}`;
-};
+}
 
 /**
  * @private
@@ -78,9 +86,9 @@ export default function cookieStorage() {
       if (options.domain && typeof options.domain === 'string') {
         metadata.domain = options.domain.trim();
       }
-      const expires = buildStringFor('expires', metadata);
-      const domain = buildStringFor('domain', metadata);
-      const path = buildStringFor('path', metadata);
+      const expires = buildMetadataFor('expires', metadata);
+      const domain = buildMetadataFor('domain', metadata);
+      const path = buildMetadataFor('path', metadata);
       const cookie = `${key}=${encodeURIComponent(value)}${expires}${domain}${path}`;
       $cookie.set(cookie);
     },
@@ -98,8 +106,8 @@ export default function cookieStorage() {
       return value;
     },
 
-    removeItem(key) {
-      const metadata = Object.assign({}, $cookie.data[key]);
+    removeItem(key, options) {
+      const metadata = Object.assign({}, $cookie.data[key], options);
       metadata.expires = {days: -1};
       api.setItem(key, '', metadata);
       delete $cookie.data[key];

@@ -59,7 +59,7 @@ $ yarn add proxy-storage
 <script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.1/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.2/dist/proxy-storage.min.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -153,7 +153,9 @@ It inherits the following members from the `WebStorage` prototype:
   <br>The `options` parameter is used only when you set `"cookieStorage"`.
   Read more details [here](#handling-cookies).
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
-- **`removeItem`**`(key)`: deletes an item from the storage.
+- **`removeItem`**`(key [,options])`: deletes an item from the storage.
+  <br>The `options` parameter is used only when you set `"cookieStorage"`.
+  Read more details [here](#handling-cookies).
 - **`clear`**`()`: removes all items from the storage instance.
 - **`length`**: gets the number of items stored in the storage instance.
 
@@ -234,7 +236,9 @@ Each instance handles an adapter with the following API:
   <br>The `options` parameter is used only when you set `"cookieStorage"`.
   Read more details [here](#handling-cookies).
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
-- **`removeItem`**`(key)`: deletes an item from the storage.
+- **`removeItem`**`(key [,options])`: deletes an item from the storage.
+  <br>The `options` parameter is used only when you set `"cookieStorage"`.
+  Read more details [here](#handling-cookies).
 - **`clear`**`()`: removes all items from the storage instance.
 - **`length`**: gets the number of items stored in the storage instance.
 
@@ -253,7 +257,7 @@ const sessionStore = new WebStorage('sessionStorage');
 sessionStore.setItem('character', { name: 'Mordecai' });
 
 // store in cookies
-const options = { expires: {days:1} };
+const options = { expires: {days: 1} };
 const cookieStore = new WebStorage('cookieStorage');
 cookieStore.setItem('character', { name: 'Rigby' }, options);
 ```
@@ -341,7 +345,8 @@ cookieStore.setItem('testing3', 3, {
 
 **Important**: Take into account that if you want to modify or remove a cookie
 that was created with a specific `path` or `domain` / subdomain, you need to
-explicitate the domain attribute in `setItem(key, value, options)`.
+explicitate the domain attribute in the `options` when calling
+`setItem(key, value, options)` or `removeItem(key, options)`.
 
 ![cookies](https://www.dropbox.com/s/wlvgm0t8xc07me1/cookies-metadata.gif?dl=1)
 
@@ -359,9 +364,8 @@ cookieStore.setItem('landedAnswers', 999, {
 });
 
 // remove an external cookie in a subdomain
-cookieStore.setItem('optimizelyEndUserId', '', {
+cookieStore.removeItem('optimizelyEndUserId', {
   domain: '.healthcare.org',
-  expires: {days: -1}, // trick!
 });
 ```
 
@@ -443,7 +447,7 @@ the _value_ passed and returned in each callback.
 import storage, { WebStorage } from 'proxy-storage';
 
 // adds first interceptor for 'setItem'
-WebStorage.interceptors('setItem', (key, value) => {
+WebStorage.interceptors('setItem', (key, value/*, options*/) => {
   if (key === 'storage-test') {
     // transform the 'id' property by encoding it to base64
     value.id = btoa(value.id);
@@ -454,7 +458,7 @@ WebStorage.interceptors('setItem', (key, value) => {
 // adds second interceptor for 'setItem'
 WebStorage.interceptors('setItem', (key, value) => {
   // does not apply any transformation
-  console.info('setItem: See the localStorage in your browser');
+  console.info('setItem: See the application storage in your browser');
   console.log(`${key}: ${JSON.stringify(value)}`);
 });
 
@@ -467,7 +471,7 @@ WebStorage.interceptors('getItem', (key, value) => {
   return value;
 });
 
-WebStorage.interceptors('removeItem', (key) => {
+WebStorage.interceptors('removeItem', (key/*, options*/) => {
   console.log(`removeItem: ${key}`);
 });
 
@@ -552,19 +556,28 @@ console.log('in memoryStorage', data);
 
 ## Shimming-polyfills
 
-<!-- TODO: Add polyfill.io -->
-
 This library is written using some of the new ES6 features, e.g.
-`Object.assign()`. If your target browsers does not have support,
-you can polyfill some of the ES2015 features with the next alternatives:
+`Object.assign()`. If you have to support Non-standard-compliant browsers
+(e.g. Internet Explorer), you can polyfill some of the ES2015 features with
+the following alternatives:
 
-The reason is because this library use some of the new features in ES5-ES6.
-To overcome this problem, you may include in your project the
-[es6-shim](https://github.com/paulmillr/es6-shim) script before all scripts.
+**[es6-shim](https://github.com/paulmillr/es6-shim)**
 
 ```html
-<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.1/es6-shim.min.js"></script>
+<!-- put this script FIRST, before all other scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.min.js"></script>
 ```
+
+**[polyfill.io](https://polyfill.io/v2/docs/)**
+
+```html
+<!-- put this script FIRST, before all other scripts -->
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+```
+
+[Polyfill.io](https://polyfill.io/v2/docs/examples) reads the `User-Agent`
+header of each request and returns the polyfills that are suitable for the
+requesting browser.
 
 ## Running the project
 

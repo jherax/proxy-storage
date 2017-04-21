@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.1.1. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.1.2. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -150,7 +150,7 @@ function setProperty(obj, name, value) {
 
 /**
  * Validates if the key is not empty.
- * (null, undefined either empty string)
+ * (null, undefined or empty string)
  *
  * @param  {string} key: keyname of an element in the storage mechanism
  * @return {void}
@@ -230,6 +230,15 @@ var _interceptors = {
   removeItem: [],
   clear: []
 };
+
+/**
+ * @private
+ *
+ * Keys not allowed for cookies.
+ *
+ * @type {RegExp}
+ */
+var bannedKeys = /^(?:expires|max-age|path|domain|secure)$/i;
 
 /**
  * @private
@@ -376,14 +385,20 @@ var WebStorage = function () {
     key: 'setItem',
     value: function setItem(key, value, options) {
       (0, _utils.checkEmpty)(key);
+      var storageType = this.__storage__;
+      if (storageType === 'cookieStorage' && bannedKeys.test(key)) {
+        throw new Error('The key is a reserved word, therefore not allowed');
+      }
       var v = executeInterceptors('setItem', key, value, options);
       if (v !== undefined) value = v;
       this[key] = value;
       // prevents converting strings to JSON to avoid extra quotes
       if (typeof value !== 'string') value = JSON.stringify(value);
-      // TODO: should add setTimeout for options.expires?
-      // TODO: prevent adding cookies when the domain or path are not valid?
-      _proxyMechanism.proxy[this.__storage__].setItem(key, value, options);
+      _proxyMechanism.proxy[storageType].setItem(key, value, options);
+      // checks if the cookie was created, or delete it if the domain or path are not valid
+      if (storageType === 'cookieStorage' && _proxyMechanism.proxy[storageType].getItem(key) === null) {
+        delete this[key];
+      }
     }
 
     /**
@@ -416,6 +431,7 @@ var WebStorage = function () {
      * Deletes a key from the storage.
      *
      * @param  {string} key: keyname of the storage
+     * @param  {object} options: additional options for cookieStorage
      * @return {void}
      *
      * @memberOf WebStorage
@@ -423,11 +439,11 @@ var WebStorage = function () {
 
   }, {
     key: 'removeItem',
-    value: function removeItem(key) {
+    value: function removeItem(key, options) {
       (0, _utils.checkEmpty)(key);
-      executeInterceptors('removeItem', key);
+      executeInterceptors('removeItem', key, options);
       delete this[key];
-      _proxyMechanism.proxy[this.__storage__].removeItem(key);
+      _proxyMechanism.proxy[this.__storage__].removeItem(key, options);
     }
 
     /**
@@ -542,11 +558,19 @@ function buildExpirationString(date) {
   return expires.toUTCString();
 }
 
-// @private
-var buildStringFor = function buildStringFor(key, data) {
+/**
+ * @private
+ *
+ * Builds the string for the cookie's metadata.
+ *
+ * @param  {string} key: name of the metadata
+ * @param  {object} data: metadata of the cookie
+ * @return {string}
+ */
+function buildMetadataFor(key, data) {
   if (!data[key]) return '';
   return '; ' + key + '=' + data[key];
-};
+}
 
 /**
  * @private
@@ -583,9 +607,9 @@ function cookieStorage() {
       if (options.domain && typeof options.domain === 'string') {
         metadata.domain = options.domain.trim();
       }
-      var expires = buildStringFor('expires', metadata);
-      var domain = buildStringFor('domain', metadata);
-      var path = buildStringFor('path', metadata);
+      var expires = buildMetadataFor('expires', metadata);
+      var domain = buildMetadataFor('domain', metadata);
+      var path = buildMetadataFor('path', metadata);
       var cookie = key + '=' + encodeURIComponent(value) + expires + domain + path;
       $cookie.set(cookie);
     },
@@ -601,8 +625,8 @@ function cookieStorage() {
       if (value === null) delete $cookie.data[key];
       return value;
     },
-    removeItem: function removeItem(key) {
-      var metadata = Object.assign({}, $cookie.data[key]);
+    removeItem: function removeItem(key, options) {
+      var metadata = Object.assign({}, $cookie.data[key], options);
       metadata.expires = { days: -1 };
       api.setItem(key, '', metadata);
       delete $cookie.data[key];
