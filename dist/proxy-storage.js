@@ -831,9 +831,6 @@ var _isAvailable = __webpack_require__(1);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-// If you want to support all ES6 features, uncomment the next line
-// import 'babel-polyfill';
-
 /**
  * @public
  *
