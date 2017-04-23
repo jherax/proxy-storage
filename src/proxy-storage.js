@@ -106,5 +106,7 @@ function init() {
 
 init();
 
-// @public API
+/**
+ * @public API
+ */
 export {storage as default, WebStorage, configStorage, isAvailable};

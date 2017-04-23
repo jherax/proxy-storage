@@ -30,36 +30,42 @@ function setStoreToWindow(hashtable) {
 /**
  * @public
  *
- * Create, read, and delete elements from memory store and
- * implements the Web Storage interface. It also adds a hack
- * to persist the store in session for the current browser-tab.
+ * Create, read, and delete elements from memory, and implements
+ * the Web Storage interface. It also adds a hack to persist
+ * the storage in the session for the current tab (browser).
  *
  * @return {object}
  */
 export default function memoryStorage() {
   const hashtable = getStoreFromWindow();
   const api = {
+
     setItem(key, value) {
       hashtable[key] = value;
       setStoreToWindow(hashtable);
     },
+
     getItem(key) {
       const value = hashtable[key];
       return value === undefined ? null : value;
     },
+
     removeItem(key) {
       delete hashtable[key];
       setStoreToWindow(hashtable);
     },
+
     clear() {
       Object.keys(hashtable).forEach(key => delete hashtable[key]);
       setStoreToWindow(hashtable);
     },
-    // this method will be removed after being invoked
-    // because is not part of the Web Storage interface
+
     initialize() {
       // copies all existing elements in the storage
       Object.assign(api, hashtable);
+      // this method is removed after being invoked
+      // because is not part of the Web Storage interface
+      delete api.initialize;
     },
   };
   return api;

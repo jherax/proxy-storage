@@ -265,5 +265,7 @@ class WebStorage {
   }
 }
 
-// @public API
+/**
+ * @public API
+ */
 export {WebStorage as default, webStorageSettings, proxy};

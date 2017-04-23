@@ -502,7 +502,9 @@ var WebStorage = function () {
   return WebStorage;
 }();
 
-// @public API
+/**
+ * @public API
+ */
 
 
 exports.default = WebStorage;
@@ -526,7 +528,7 @@ var _utils = __webpack_require__(0);
 /**
  * @private
  *
- * Proxy for the default cookie storage associated with the current document.
+ * Proxy for document.cookie
  *
  * @see
  * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
@@ -545,14 +547,13 @@ var $cookie = {
 /**
  * @private
  *
- * Builds the expiration part for the cookie.
+ * Builds the expiration for the cookie.
  *
  * @see utils.alterDate(options)
  *
  * @param  {Date|object} date: the expiration date
  * @return {string}
  */
-/* eslint-disable no-invalid-this */
 function buildExpirationString(date) {
   var expires = date instanceof Date ? (0, _utils.alterDate)({ date: date }) : (0, _utils.alterDate)(date);
   return expires.toUTCString();
@@ -589,7 +590,7 @@ function findCookie(cookie) {
 /**
  * @public
  *
- * Create, read, and delete elements from document cookies
+ * Create, read, and delete elements from document.cookie,
  * and implements the Web Storage interface.
  *
  * @return {object}
@@ -643,18 +644,17 @@ function cookieStorage() {
         }
       });
     },
-
-
-    // this method will be removed after being invoked
-    // because is not part of the Web Storage interface
     initialize: function initialize() {
+      // copies all existing elements in the storage
       $cookie.get().split(';').forEach(function (cookie) {
         var index = cookie.indexOf('=');
         var key = cookie.substring(0, index).trim();
         var value = cookie.substring(index + 1).trim();
-        // copies all existing elements in the storage
         if (key) api[key] = decodeURIComponent(value);
       });
+      // this method is removed after being invoked
+      // because is not part of the Web Storage interface
+      delete api.initialize;
     }
   };
   return api;
@@ -707,9 +707,9 @@ function setStoreToWindow(hashtable) {
 /**
  * @public
  *
- * Create, read, and delete elements from memory store and
- * implements the Web Storage interface. It also adds a hack
- * to persist the store in session for the current browser-tab.
+ * Create, read, and delete elements from memory, and implements
+ * the Web Storage interface. It also adds a hack to persist
+ * the storage in the session for the current tab (browser).
  *
  * @return {object}
  */
@@ -734,12 +734,12 @@ function memoryStorage() {
       });
       setStoreToWindow(hashtable);
     },
-
-    // this method will be removed after being invoked
-    // because is not part of the Web Storage interface
     initialize: function initialize() {
       // copies all existing elements in the storage
       Object.assign(api, hashtable);
+      // this method is removed after being invoked
+      // because is not part of the Web Storage interface
+      delete api.initialize;
     }
   };
   return api;
@@ -772,14 +772,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 /**
  * @private
  *
- * Adds the current elements in the storage object.
+ * Copy the current items in the storage mechanism.
  *
  * @param  {object} api: the storage mechanism to initialize
  * @return {object}
  */
 function initApi(api) {
   if (!api.initialize) return api;
-  // sets read-only and non-enumerable properties
+  // sets API members to read-only and non-enumerable
   for (var prop in api) {
     // eslint-disable-line
     if (prop !== 'initialize') {
@@ -787,16 +787,13 @@ function initApi(api) {
     }
   }
   api.initialize();
-  // this method is removed after being invoked
-  // because is not part of the Web Storage interface
-  delete api.initialize;
   return api;
 }
 
 /**
  * @public
  *
- * Proxy for storage mechanisms.
+ * Proxy for the storage mechanisms.
  * All members implement the Web Storage interface.
  *
  * @see
@@ -937,7 +934,9 @@ function init() {
 
 init();
 
-// @public API
+/**
+ * @public API
+ */
 exports.default = storage;
 exports.WebStorage = _webStorage2.default;
 exports.configStorage = configStorage;

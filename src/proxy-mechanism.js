@@ -5,30 +5,27 @@ import {setProperty} from './utils';
 /**
  * @private
  *
- * Adds the current elements in the storage object.
+ * Copy the current items in the storage mechanism.
  *
  * @param  {object} api: the storage mechanism to initialize
  * @return {object}
  */
 function initApi(api) {
   if (!api.initialize) return api;
-  // sets read-only and non-enumerable properties
+  // sets API members to read-only and non-enumerable
   for (let prop in api) { // eslint-disable-line
     if (prop !== 'initialize') {
       setProperty(api, prop);
     }
   }
   api.initialize();
-  // this method is removed after being invoked
-  // because is not part of the Web Storage interface
-  delete api.initialize;
   return api;
 }
 
 /**
  * @public
  *
- * Proxy for storage mechanisms.
+ * Proxy for the storage mechanisms.
  * All members implement the Web Storage interface.
  *
  * @see

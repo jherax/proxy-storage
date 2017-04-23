@@ -117,44 +117,41 @@ require(['proxy-storage'], function(proxyStorage) {
 });
 ```
 
-See an example with RequireJS here: http://jsfiddle.net/FdKTn/67/
+See an example with RequireJS here: http://jsfiddle.net/FdKTn/71/
 
 # API
 
-The exposed interface manages an adapter that stores the data
-as **JSON**, allowing to save `Object` and `Array<Any>` values, which
-is not the default behavior when using the native `window.localStorage`,
-`window.sessionStorage` and `document.cookie` storages. It also provides
-a new storage mechanism called **`memoryStorage`** which persists the data
-in memory (current browser tab), even if a forced refresh is done
-(similar to `sessionStorage`).
+The exposed API manages an adapter that stores the data
+as **JSON**, allowing to save and retrieve **primitive**,
+`Object` and `Array<Any>` values, thanks to `JSON.stringify`.
+
+It also provides a new storage mechanism called **`memoryStorage`**
+which persists the data in memory (current tab in the browser), even
+if a forced refresh is done (similar to `sessionStorage`).
 
 The [`WebStorage`](#webstorage) class has a static member called
 [`interceptors`](#interceptors) which lets you to register callback
-functions on the prototype methods `setItem`, `getItem`, `removeItem`,
+functions upon the prototype methods `setItem`, `getItem`, `removeItem`,
 and `clear`, giving you the ability to intercept and modify the values
-to read/write/delete.
+to read, write, or delete.
 
-This library is exported as [UMD] _(Universal Module Definition)_ and the API
-contains the following members:
+This library is exported as [UMD] _(Universal Module Definition)_ and
+the API contains the following members:
 
 ## storage (or default)
 
 **_@type_ `Object`**
 
-This is the **default** module and is an instance of
-[`WebStorage`](#webstorage). It saves and retrieves the data internally as
-**JSON**, allowing not only storing **primitive** values but also **Object**
-values.
-
-It inherits the following members from the `WebStorage` prototype:
+This is the **default** member of the library and is an instance of
+[`WebStorage`](#webstorage). It inherits the following members from
+the prototype:
 
 - **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.
-  <br>The `options` parameter is used only when you set `"cookieStorage"`.
+  <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
 - **`removeItem`**`(key [,options])`: deletes an item from the storage.
-  <br>The `options` parameter is used only when you set `"cookieStorage"`.
+  <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
 - **`clear`**`()`: removes all items from the storage instance.
 - **`length`**: gets the number of items stored in the storage instance.
@@ -230,21 +227,21 @@ Where **`storageType`** is a `string` that describes the type of storage
 to manage. It can be one of the following values: `"localStorage"`,
 `"sessionStorage"`, `"cookieStorage"`, or `"memoryStorage"`.
 
-Each instance handles an adapter with the following API:
+Each instance inherits the following members:
 
 - **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.
-  <br>The `options` parameter is used only when you set `"cookieStorage"`.
+  <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
 - **`getItem`**`(key)`: retrieves a value by its `key` name.
 - **`removeItem`**`(key [,options])`: deletes an item from the storage.
-  <br>The `options` parameter is used only when you set `"cookieStorage"`.
+  <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
 - **`clear`**`()`: removes all items from the storage instance.
 - **`length`**: gets the number of items stored in the storage instance.
 
-You can create multiple instances of `WebStorage` to handle different storage
-mechanisms. To store data in `cookies` and also in `sessionStorage`, you can
-do as follow:
+You can create multiple instances of `WebStorage` to handle different
+storage mechanisms. For example, to store data in `cookies` and also in
+`sessionStorage`, you can do as follow:
 
 ```javascript
 import storage, { WebStorage } from 'proxy-storage';
@@ -284,7 +281,7 @@ import { WebStorage, isAvailable } from 'proxy-storage';
 
 ### Handling cookies
 
-When you create an instance of `WebStorage` for `"cookieStorage"`, the
+When you create an instance of `WebStorage` with `cookieStorage`, the
 method `setItem()` receives an optional argument as the last parameter,
 that configures the way how the cookie is stored.
 
@@ -317,7 +314,7 @@ const cookieStore = new WebStorage('cookieStorage');
 
 let data = {
   start: new Date().toISOString(),
-  sessionId: 'J34H5609-SG7BND98W3',
+  sessionId: 'J34H5609-SG7ND98W3',
   platform: 'Linux x86_64',
 };
 
@@ -373,7 +370,7 @@ cookieStore.removeItem('optimizelyEndUserId', {
 
 You can loop over the items in the storage instance, e.g.
 `localStorage`, `sessionStorage`, `cookieStorage`, or `memoryStorage`,
-but it is not a good practice, see the notes below.
+but it is not a good practice, see the Important note below.
 
 ```javascript
 const sessionStore = new WebStorage('sessionStorage');
@@ -428,10 +425,10 @@ function clearAllStorages() {
 ### Interceptors
 
 The [`WebStorage`](#webstorage) class exposes the static member `interceptors`
-which lets you to register callback functions on the prototype methods
+which lets you to register callback functions upon the prototype methods
 `setItem`, `getItem`, `removeItem`, and `clear`.
-It is very useful when you need to take actions accessing the API methods,
-giving you the ability to intercept and modify the values to read/write/delete.
+It is very useful when you need to perform an action to intercept the value
+to read, write, or delete.
 
 - **`WebStorage.interceptors`**`(command, action)`: adds an interceptor to
   the API method.

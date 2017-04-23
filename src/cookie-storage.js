@@ -1,10 +1,9 @@
-/* eslint-disable no-invalid-this */
 import {alterDate, isObject} from './utils';
 
 /**
  * @private
  *
- * Proxy for the default cookie storage associated with the current document.
+ * Proxy for document.cookie
  *
  * @see
  * https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
@@ -22,7 +21,7 @@ const $cookie = {
 /**
  * @private
  *
- * Builds the expiration part for the cookie.
+ * Builds the expiration for the cookie.
  *
  * @see utils.alterDate(options)
  *
@@ -68,13 +67,14 @@ function findCookie(cookie) {
 /**
  * @public
  *
- * Create, read, and delete elements from document cookies
+ * Create, read, and delete elements from document.cookie,
  * and implements the Web Storage interface.
  *
  * @return {object}
  */
 export default function cookieStorage() {
   const api = {
+
     setItem(key, value, options) {
       options = Object.assign({path: '/'}, options);
       // keep track of the metadata associated to the cookie
@@ -125,16 +125,17 @@ export default function cookieStorage() {
       });
     },
 
-    // this method will be removed after being invoked
-    // because is not part of the Web Storage interface
     initialize() {
+      // copies all existing elements in the storage
       $cookie.get().split(';').forEach((cookie) => {
         const index = cookie.indexOf('=');
         const key = cookie.substring(0, index).trim();
         const value = cookie.substring(index + 1).trim();
-        // copies all existing elements in the storage
         if (key) api[key] = decodeURIComponent(value);
       });
+      // this method is removed after being invoked
+      // because is not part of the Web Storage interface
+      delete api.initialize;
     },
   };
   return api;
