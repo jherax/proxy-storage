@@ -39,7 +39,7 @@ function buildExpirationString(date) {
 /**
  * @private
  *
- * Builds the string for the cookie's metadata.
+ * Builds the string for the cookie metadata.
  *
  * @param  {string} key: name of the metadata
  * @param  {object} data: metadata of the cookie
@@ -47,7 +47,23 @@ function buildExpirationString(date) {
  */
 function buildMetadataFor(key, data) {
   if (!data[key]) return '';
-  return `; ${key}=${data[key]}`;
+  return `;${key}=${data[key]}`;
+}
+
+/**
+ * @private
+ *
+ * Builds the whole string for the cookie metadata.
+ *
+ * @param  {object} data: metadata of the cookie
+ * @return {string}
+ */
+function formatMetadata(data) {
+  const expires = buildMetadataFor('expires', data);
+  const domain = buildMetadataFor('domain', data);
+  const path = buildMetadataFor('path', data);
+  const secure = data.secure ? ';secure' : '';
+  return `${expires}${domain}${path}${secure}`;
 }
 
 /**
@@ -86,10 +102,9 @@ export default function cookieStorage() {
       if (options.domain && typeof options.domain === 'string') {
         metadata.domain = options.domain.trim();
       }
-      const expires = buildMetadataFor('expires', metadata);
-      const domain = buildMetadataFor('domain', metadata);
-      const path = buildMetadataFor('path', metadata);
-      const cookie = `${key}=${encodeURIComponent(value)}${expires}${domain}${path}`;
+      if (options.secure === true) metadata.secure = true;
+      const cookie = `${key}=${encodeURIComponent(value)}${formatMetadata(metadata)}`;
+      // TODO: should encodeURIComponent(key) ?
       $cookie.set(cookie);
     },
 

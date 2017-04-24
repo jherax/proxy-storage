@@ -59,7 +59,7 @@ $ yarn add proxy-storage
 <script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.2/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.3/dist/proxy-storage.min.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -295,6 +295,7 @@ Where the **`options`** parameter is an `object` with the following properties:
 
 - `domain`_`{string}`_: the domain or subdomain where the cookie will be valid.
 - `path`_`{string}`_: relative path where the cookie is valid. _Default `"/"`_
+- `secure`_`{boolean}`_: if provided, sets a secure cookie (HTTPS).
 - `expires`_`{Date, object}`_: the expiration date of the cookie.
   You can pass an object describing the expiration:
   - `date`_`{Date}`_: if provided, this date will be applied, otherwise the
@@ -323,12 +324,13 @@ cookieStore.setItem('activity', data, {
 });
 
 cookieStore.setItem('testing1', true, {
-  path: '/profile',
-  expires: new Date('2018/03/06'),
+  secure: true,
+  path: '/jherax',
+  expires: new Date('2017/12/31'),
 });
 
 cookieStore.setItem('testing2', [1,4,7], {
-  domain: '.wordpress.com',
+  domain: '.github.com',
   expires: { days: 1 },
 });
 
@@ -426,9 +428,8 @@ function clearAllStorages() {
 
 The [`WebStorage`](#webstorage) class exposes the static member `interceptors`
 which lets you to register callback functions upon the prototype methods
-`setItem`, `getItem`, `removeItem`, and `clear`.
-It is very useful when you need to perform an action to intercept the value
-to read, write, or delete.
+`setItem`, `getItem`, `removeItem`, and `clear`. It is very useful when you
+need to perform an action to intercept the value to read, write, or delete.
 
 - **`WebStorage.interceptors`**`(command, action)`: adds an interceptor to
   the API method.
@@ -473,7 +474,7 @@ WebStorage.interceptors('removeItem', (key/*, options*/) => {
 });
 
 // uses the default storage mechanism (usually localStorage)
-storage.setItem('storage-test', { id: 1040, text: 'it works!' });
+storage.setItem('storage-test', {id: 1040, text: 'it works!'});
 let data = storage.getItem('storage-test');
 console.log(data);
 

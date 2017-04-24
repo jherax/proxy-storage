@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.1.2. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.1.3. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -562,7 +562,7 @@ function buildExpirationString(date) {
 /**
  * @private
  *
- * Builds the string for the cookie's metadata.
+ * Builds the string for the cookie metadata.
  *
  * @param  {string} key: name of the metadata
  * @param  {object} data: metadata of the cookie
@@ -570,7 +570,23 @@ function buildExpirationString(date) {
  */
 function buildMetadataFor(key, data) {
   if (!data[key]) return '';
-  return '; ' + key + '=' + data[key];
+  return ';' + key + '=' + data[key];
+}
+
+/**
+ * @private
+ *
+ * Builds the whole string for the cookie metadata.
+ *
+ * @param  {object} data: metadata of the cookie
+ * @return {string}
+ */
+function formatMetadata(data) {
+  var expires = buildMetadataFor('expires', data);
+  var domain = buildMetadataFor('domain', data);
+  var path = buildMetadataFor('path', data);
+  var secure = data.secure ? ';secure' : '';
+  return '' + expires + domain + path + secure;
 }
 
 /**
@@ -608,10 +624,9 @@ function cookieStorage() {
       if (options.domain && typeof options.domain === 'string') {
         metadata.domain = options.domain.trim();
       }
-      var expires = buildMetadataFor('expires', metadata);
-      var domain = buildMetadataFor('domain', metadata);
-      var path = buildMetadataFor('path', metadata);
-      var cookie = key + '=' + encodeURIComponent(value) + expires + domain + path;
+      if (options.secure === true) metadata.secure = true;
+      var cookie = key + '=' + encodeURIComponent(value) + formatMetadata(metadata);
+      // TODO: should encodeURIComponent(key) ?
       $cookie.set(cookie);
     },
     getItem: function getItem(key) {

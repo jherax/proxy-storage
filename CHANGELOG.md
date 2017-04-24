@@ -2,13 +2,21 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.1.3
+
+### Improvements
+
+1. Allow storing secure cookies (HTTPS). The property `secure` is available through the `options` parameter for `setItem()` and `removeItem()`
+
+---
+
 ## 2.1.2
 
 ### Improvements
 
 1. Added the `options` parameter to the API method `removeItem()`, in order to allow passing metadata to the cookie to delete.
    When using `"cookieStorage"` the new signature is: `instance.removeItem(key, options)`
-1. Checks if the cookie was created on `setItem()`, or delete it if the domain or path are not valid.
+1. When calling `setItem()`, checks if the cookie was created, or deletes it if the domain or path are not valid.
 
 ---
 
