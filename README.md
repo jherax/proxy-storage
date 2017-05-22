@@ -19,9 +19,10 @@ some browsers navigating in private mode.
 Read more about [window.sessionStorage].
 
 Another advantage with **proxy-storage** is that you can register
-[interceptors](#interceptors) as callback functions on the prototype methods
-`setItem`, `getItem`, `removeItem`, and `clear`, giving you the ability to
-intercept and modify the values to read/write/delete.
+[interceptors](#interceptors) as callback functions on the
+[WebStorage](#webstorage) prototype methods: `setItem`, `getItem`,
+`removeItem`, and `clear`, giving you the ability to intercept and
+modify the values to read, write, or delete.
 
 ## Content
 
@@ -64,6 +65,8 @@ $ yarn add proxy-storage
 
 In the above case, [`proxyStorage`](#api) is included as a global object
 in the browser, and you can use it like this:
+
+### Browser
 
 ```javascript
 // gets the default storage mechanism (usually localStorage)
@@ -554,19 +557,18 @@ console.log('in memoryStorage', data);
 
 ## Shimming-polyfills
 
-This library is written using some of the new ES6 features, e.g.
-`Object.assign()`. If you have to support Non-standard-compliant browsers
-(e.g. Internet Explorer), you can polyfill some of the ES2015 features with
-the following alternatives:
+This library is written using some of the new ES5/ES6 features. If you have
+to support Non-standard-compliant browsers like Internet Explorer, you can
+polyfill some of the missing features with the following alternatives:
 
-**[es6-shim](https://github.com/paulmillr/es6-shim)**
+**Using [es6-shim](https://github.com/paulmillr/es6-shim)**
 
 ```html
 <!-- put this script FIRST, before all other scripts -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/es6-shim/0.35.3/es6-shim.min.js"></script>
 ```
 
-**[polyfill.io](https://polyfill.io/v2/docs/)**
+**Using [polyfill.io](https://polyfill.io/v2/docs/)**
 
 ```html
 <!-- put this script FIRST, before all other scripts -->
@@ -576,6 +578,18 @@ the following alternatives:
 [Polyfill.io](https://polyfill.io/v2/docs/examples) reads the `User-Agent`
 header of each request and returns the polyfills that are suitable for the
 requesting browser.
+
+If you want to request specific polyfills, you can pass a query parameter
+to the url, for example:
+
+```html
+<!--[if IE]>
+<script src="https://polyfill.io/v2/polyfill.min.js?features=default-3.3&flags=always"></script>
+<![endif]-->
+```
+
+Read the list of available features:
+[Features and Browsers Supported](https://polyfill.io/v2/docs/features/).
 
 ## Running the project
 
