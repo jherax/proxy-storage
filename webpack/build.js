@@ -15,7 +15,7 @@ const config = {
     path: PATHS.dist.folder,
     filename: '[name].js',
     libraryTarget: 'umd',
-    library: 'proxyStorage', // global var in the browser
+    library: 'proxyStorage', // global
   },
   module: {
     rules: [
@@ -25,8 +25,15 @@ const config = {
       },
       {
         test: PATHS.source.folder,
+        exclude: /node_modules/,
         enforce: 'pre', // preLoaders
         loader: 'eslint-loader',
+        options: {
+          // https://github.com/MoOx/eslint-loader
+          configFile: '.eslintrc.json',
+          failOnWarning: false,
+          failOnError: true,
+        },
       },
     ],
   },
@@ -36,31 +43,16 @@ const config = {
       verbose: true,
       // exclude: [],
     }),
-    // https://webpack.js.org/guides/migrating/#uglifyjsplugin-minimize-loaders
-    new webpack.LoaderOptionsPlugin({
-      debug: false,
-      minimize: true,
-      options: {
-        eslint: {
-          // https://github.com/MoOx/eslint-loader
-          // https://survivejs.com/webpack/developing/linting/#configuring-eslint-further
-          configFile: '.eslintrc.json',
-          failOnWarning: false,
-          failOnError: true,
-        },
-      },
-    }),
-    // http://webpack.github.io/docs/list-of-plugins.html#uglifyjsplugin
+    // https://webpack.js.org/plugins/uglifyjs-webpack-plugin/
     new webpack.optimize.UglifyJsPlugin({
       test,
-      minimize: true,
       sourceMap: true, // map error message locations to modules
-      // https://github.com/mishoo/UglifyJS2#compressor-options
+      // https://github.com/mishoo/UglifyJS2#compress-options
       compress: {
         warnings: true,
-        dead_code: true,
+        dead_code: true, // remove unreachable code
         drop_debugger: true,
-        drop_console: false,
+        pure_funcs: ['console.log'],
       },
       mangle: {
         except: ['WebStorage'],

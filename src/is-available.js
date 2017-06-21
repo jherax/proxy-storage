@@ -7,7 +7,7 @@
  */
 export const isAvailable = {
   localStorage: false,
-  sessionStorage: false,
   cookieStorage: false,
+  sessionStorage: false,
   memoryStorage: true, // fallback storage
 };

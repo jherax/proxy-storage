@@ -112,8 +112,11 @@ const webStorageSettings = {
  */
 function storageAvailable(storageType) {
   if (webStorageSettings.isAvailable[storageType]) return storageType;
-  console.warn(`${storageType} is not available. Falling back to ${webStorageSettings.default}`); // eslint-disable-line
-  return webStorageSettings.default;
+  const fallback = (storageType === 'sessionStorage' ?
+    'memoryStorage' : webStorageSettings.default);
+  const msg = `${storageType} is not available. Falling back to ${fallback}`;
+  console.warn(msg); // eslint-disable-line
+  return fallback;
 }
 
 /**
@@ -128,7 +131,6 @@ function storageAvailable(storageType) {
  * @type {class}
  */
 class WebStorage {
-
   /**
    * Creates an instance of WebStorage.
    *

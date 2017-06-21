@@ -60,7 +60,7 @@ $ yarn add proxy-storage
 <script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.1.3/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.2.0/dist/proxy-storage.min.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -164,9 +164,9 @@ usually `localStorage`, which is established when the library is initialized.
 The availability of the storage mechanisms is determined in the following order:
 
 1. **`localStorage`**: adapter of the [window.localStorage] object.
-1. **`sessionStorage`**: adapter of the [window.sessionStorage] object.
 1. **`cookieStorage`**: adapter of the [document.cookie] object, and
    normalized with the [`WebStorage`](#webstorage) interface.
+1. **`sessionStorage`**: adapter of the [window.sessionStorage] object.
 1. **`memoryStorage`**: internal storage mechanism that can be used as
    _fallback_ when none of the above mechanisms are available. The behavior
    of `memoryStorage` is similar to `sessionStorage`, which let you to persist
@@ -274,11 +274,11 @@ import { WebStorage, isAvailable } from 'proxy-storage';
  isAvailable.sessionStorage = false;
 
  const sessionStore = new WebStorage('sessionStorage');
- // sessionStorage is not available. Falling back to localStorage
+ // sessionStorage is not available. Falling back to memoryStorage
  sessionStore.setItem('ulugrun', 3.1415926);
 
  // as sessionStorage is not available, the instance obtained
- // is the first storage mechanism available: localStorage
+ // is the first storage mechanism available: memoryStorage
  console.dir(sessionStore);
 ```
 
@@ -526,8 +526,8 @@ Determines which storage mechanisms are available to read/write/delete data.
 It contains the following flags:
 
 - **`localStorage`**: is set to `true` if the local storage is available.
-- **`sessionStorage`**: is set to `true` if the session storage is available.
 - **`cookieStorage`**: is set to `true` if the cookie storage is available.
+- **`sessionStorage`**: is set to `true` if the session storage is available.
 - **`memoryStorage`**: always is set to `true`.
 
 **Example**
@@ -538,7 +538,7 @@ import storage, * as proxyStorage from 'proxy-storage';
 
 const flags = proxyStorage.isAvailable;
 
-if (!flags.localStorage && !flags.sessionStorage) {
+if (!flags.sessionStorage) {
   // forces the storage mechanism to memoryStorage
   proxyStorage.configStorage.set('memoryStorage');
 }

@@ -45,9 +45,6 @@ const configStorage = {
    * @return {void}
    */
   set(storageType) {
-    if (!Object.prototype.hasOwnProperty.call(proxy, storageType)) {
-      throw new Error(`Storage type "${storageType}" is not valid`);
-    }
     storage = new WebStorage(storageType);
   },
 };
@@ -66,10 +63,10 @@ function isStorageAvailable(storageType) {
   try {
     storageObj.setItem(data, data);
     storageObj.removeItem(data);
-    return true;
   } catch (e) {
     return false;
   }
+  return true;
 }
 
 /**
@@ -97,8 +94,8 @@ function storageAvailable(storageType) {
  */
 function init() {
   isAvailable.localStorage = isStorageAvailable('localStorage');
-  isAvailable.sessionStorage = isStorageAvailable('sessionStorage');
   isAvailable.cookieStorage = isStorageAvailable('cookieStorage');
+  isAvailable.sessionStorage = isStorageAvailable('sessionStorage');
   webStorageSettings.isAvailable = isAvailable;
   // sets the default storage mechanism available
   Object.keys(isAvailable).some(storageAvailable);

@@ -2,6 +2,14 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.2.0
+
+### Improvements
+
+1. Allow `memoryStorage` to be the default fallback for `sessionStorage`
+
+---
+
 ## 2.1.3
 
 ### Improvements
