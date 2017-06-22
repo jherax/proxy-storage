@@ -44,9 +44,6 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// expose the module cache
 /******/ 	__webpack_require__.c = installedModules;
 /******/
-/******/ 	// identity function for calling harmony imports with the correct context
-/******/ 	__webpack_require__.i = function(value) { return value; };
-/******/
 /******/ 	// define getter function for harmony exports
 /******/ 	__webpack_require__.d = function(exports, name, getter) {
 /******/ 		if(!__webpack_require__.o(exports, name)) {
@@ -74,7 +71,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = 6);
+/******/ 	return __webpack_require__(__webpack_require__.s = 2);
 /******/ })
 /************************************************************************/
 /******/ ([
@@ -195,13 +192,144 @@ var isAvailable = exports.isAvailable = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports.isAvailable = exports.configStorage = exports.WebStorage = exports.default = undefined;
+
+var _webStorage = __webpack_require__(3);
+
+var _webStorage2 = _interopRequireDefault(_webStorage);
+
+var _isAvailable = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @public
+ *
+ * Current storage mechanism.
+ *
+ * @type {object}
+ */
+/**
+ * This library uses an adapter that implements the Web Storage interface,
+ * which is very useful to deal with the lack of compatibility between
+ * document.cookie and localStorage and sessionStorage.
+ *
+ * It also provides a memoryStorage fallback that stores the data in memory
+ * when all of above mechanisms are not available.
+ *
+ * Author: David Rivera
+ * Github: https://github.com/jherax
+ * License: "MIT"
+ *
+ * You can fork this project on github:
+ * https://github.com/jherax/proxy-storage.git
+ */
+
+var storage = null;
+
+/**
+ * @public
+ *
+ * Get/Set the storage mechanism to use by default.
+ *
+ * @type {object}
+ */
+var configStorage = {
+  get: function get() {
+    return storage.__storage__;
+  },
+
+
+  /**
+   * Sets the storage mechanism to use by default.
+   *
+   * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+   * @return {void}
+   */
+  set: function set(storageType) {
+    exports.default = storage = new _webStorage2.default(storageType);
+  }
+};
+
+/**
+ * @private
+ *
+ * Checks whether a storage mechanism is available.
+ *
+ * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+ * @return {boolean}
+ */
+function isStorageAvailable(storageType) {
+  var storageObj = _webStorage.proxy[storageType];
+  var data = '__proxy-storage__';
+  try {
+    storageObj.setItem(data, data);
+    storageObj.removeItem(data);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
+/**
+ * @private
+ *
+ * Sets the first or default storage available.
+ *
+ * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
+ * @return {boolean}
+ */
+function storageAvailable(storageType) {
+  if (_isAvailable.isAvailable[storageType]) {
+    _webStorage.webStorageSettings.default = storageType;
+    configStorage.set(storageType);
+  }
+  return _isAvailable.isAvailable[storageType];
+}
+
+/**
+ * @private
+ *
+ * Initializes the module.
+ *
+ * @return {void}
+ */
+function init() {
+  _isAvailable.isAvailable.localStorage = isStorageAvailable('localStorage');
+  _isAvailable.isAvailable.cookieStorage = isStorageAvailable('cookieStorage');
+  _isAvailable.isAvailable.sessionStorage = isStorageAvailable('sessionStorage');
+  _webStorage.webStorageSettings.isAvailable = _isAvailable.isAvailable;
+  // sets the default storage mechanism available
+  Object.keys(_isAvailable.isAvailable).some(storageAvailable);
+}
+
+init();
+
+/**
+ * @public API
+ */
+exports.default = storage;
+exports.WebStorage = _webStorage2.default;
+exports.configStorage = configStorage;
+exports.isAvailable = _isAvailable.isAvailable;
+
+/***/ }),
+/* 3 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.proxy = exports.webStorageSettings = exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
-var _proxyMechanism = __webpack_require__(5);
+var _proxyMechanism = __webpack_require__(4);
 
 var _utils = __webpack_require__(0);
 
@@ -514,7 +642,70 @@ exports.webStorageSettings = webStorageSettings;
 exports.proxy = _proxyMechanism.proxy;
 
 /***/ }),
-/* 3 */
+/* 4 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.proxy = undefined;
+
+var _cookieStorage = __webpack_require__(5);
+
+var _cookieStorage2 = _interopRequireDefault(_cookieStorage);
+
+var _memoryStorage = __webpack_require__(6);
+
+var _memoryStorage2 = _interopRequireDefault(_memoryStorage);
+
+var _utils = __webpack_require__(0);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * @private
+ *
+ * Copy the current items in the storage mechanism.
+ *
+ * @param  {object} api: the storage mechanism to initialize
+ * @return {object}
+ */
+function initApi(api) {
+  if (!api.initialize) return api;
+  // sets API members to read-only and non-enumerable
+  for (var prop in api) {
+    // eslint-disable-line
+    if (prop !== 'initialize') {
+      (0, _utils.setProperty)(api, prop);
+    }
+  }
+  api.initialize();
+  return api;
+}
+
+/**
+ * @public
+ *
+ * Proxy for the storage mechanisms.
+ * All members implement the Web Storage interface.
+ *
+ * @see
+ * https://developer.mozilla.org/en-US/docs/Web/API/Storage
+ *
+ * @type {object}
+ */
+var proxy = exports.proxy = {
+  localStorage: window.localStorage,
+  sessionStorage: window.sessionStorage,
+  cookieStorage: initApi((0, _cookieStorage2.default)()),
+  memoryStorage: initApi((0, _memoryStorage2.default)())
+};
+
+/***/ }),
+/* 5 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -679,7 +870,7 @@ function cookieStorage() {
 }
 
 /***/ }),
-/* 4 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -762,200 +953,6 @@ function memoryStorage() {
   };
   return api;
 }
-
-/***/ }),
-/* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.proxy = undefined;
-
-var _cookieStorage = __webpack_require__(3);
-
-var _cookieStorage2 = _interopRequireDefault(_cookieStorage);
-
-var _memoryStorage = __webpack_require__(4);
-
-var _memoryStorage2 = _interopRequireDefault(_memoryStorage);
-
-var _utils = __webpack_require__(0);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @private
- *
- * Copy the current items in the storage mechanism.
- *
- * @param  {object} api: the storage mechanism to initialize
- * @return {object}
- */
-function initApi(api) {
-  if (!api.initialize) return api;
-  // sets API members to read-only and non-enumerable
-  for (var prop in api) {
-    // eslint-disable-line
-    if (prop !== 'initialize') {
-      (0, _utils.setProperty)(api, prop);
-    }
-  }
-  api.initialize();
-  return api;
-}
-
-/**
- * @public
- *
- * Proxy for the storage mechanisms.
- * All members implement the Web Storage interface.
- *
- * @see
- * https://developer.mozilla.org/en-US/docs/Web/API/Storage
- *
- * @type {object}
- */
-var proxy = exports.proxy = {
-  localStorage: window.localStorage,
-  sessionStorage: window.sessionStorage,
-  cookieStorage: initApi((0, _cookieStorage2.default)()),
-  memoryStorage: initApi((0, _memoryStorage2.default)())
-};
-
-/***/ }),
-/* 6 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isAvailable = exports.configStorage = exports.WebStorage = exports.default = undefined;
-
-var _webStorage = __webpack_require__(2);
-
-var _webStorage2 = _interopRequireDefault(_webStorage);
-
-var _isAvailable = __webpack_require__(1);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @public
- *
- * Current storage mechanism.
- *
- * @type {object}
- */
-/**
- * This library uses an adapter that implements the Web Storage interface,
- * which is very useful to deal with the lack of compatibility between
- * document.cookie and localStorage and sessionStorage.
- *
- * It also provides a memoryStorage fallback that stores the data in memory
- * when all of above mechanisms are not available.
- *
- * Author: David Rivera
- * Github: https://github.com/jherax
- * License: "MIT"
- *
- * You can fork this project on github:
- * https://github.com/jherax/proxy-storage.git
- */
-
-var storage = null;
-
-/**
- * @public
- *
- * Get/Set the storage mechanism to use by default.
- *
- * @type {object}
- */
-var configStorage = {
-  get: function get() {
-    return storage.__storage__;
-  },
-
-
-  /**
-   * Sets the storage mechanism to use by default.
-   *
-   * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
-   * @return {void}
-   */
-  set: function set(storageType) {
-    exports.default = storage = new _webStorage2.default(storageType);
-  }
-};
-
-/**
- * @private
- *
- * Checks whether a storage mechanism is available.
- *
- * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
- * @return {boolean}
- */
-function isStorageAvailable(storageType) {
-  var storageObj = _webStorage.proxy[storageType];
-  var data = '__proxy-storage__';
-  try {
-    storageObj.setItem(data, data);
-    storageObj.removeItem(data);
-  } catch (e) {
-    return false;
-  }
-  return true;
-}
-
-/**
- * @private
- *
- * Sets the first or default storage available.
- *
- * @param  {string} storageType: it can be "localStorage", "sessionStorage", "cookieStorage", or "memoryStorage"
- * @return {boolean}
- */
-function storageAvailable(storageType) {
-  if (_isAvailable.isAvailable[storageType]) {
-    _webStorage.webStorageSettings.default = storageType;
-    configStorage.set(storageType);
-  }
-  return _isAvailable.isAvailable[storageType];
-}
-
-/**
- * @private
- *
- * Initializes the module.
- *
- * @return {void}
- */
-function init() {
-  _isAvailable.isAvailable.localStorage = isStorageAvailable('localStorage');
-  _isAvailable.isAvailable.cookieStorage = isStorageAvailable('cookieStorage');
-  _isAvailable.isAvailable.sessionStorage = isStorageAvailable('sessionStorage');
-  _webStorage.webStorageSettings.isAvailable = _isAvailable.isAvailable;
-  // sets the default storage mechanism available
-  Object.keys(_isAvailable.isAvailable).some(storageAvailable);
-}
-
-init();
-
-/**
- * @public API
- */
-exports.default = storage;
-exports.WebStorage = _webStorage2.default;
-exports.configStorage = configStorage;
-exports.isAvailable = _isAvailable.isAvailable;
 
 /***/ })
 /******/ ]);

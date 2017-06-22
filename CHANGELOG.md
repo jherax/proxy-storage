@@ -115,13 +115,13 @@ The method `setItem` has changed its signature when the storage mechanism is set
 #### New signature
 
 ```javascript
-setItem (key {string}, value {any}, options {object});
+setItem (key: string, value: any, options: object) : void
 ```
 
 #### Old signature
 
 ```javascript
-setItem (key {string}, value {any}, expires {number}, path {string});
+setItem (key: string, value: any, expires: number, path: string) : void
 ```
 
 ---

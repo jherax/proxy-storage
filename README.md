@@ -36,8 +36,7 @@ modify the values to read, write, or delete.
    1. [Interceptors](#interceptors)
 1. [API: configStorage](#configstorage)
 1. [API: isAvailable](#isavailable)
-1. [Shimming Polyfills](#polyfills)
-1. [Running the project](#running-the-project)
+1. [Polyfills](#polyfills)
 
 ## Installing the library
 
@@ -591,7 +590,7 @@ polyfill some of the missing features with the following alternatives:
 
 ```html
 <!-- put this script FIRST, before all other scripts -->
-<script src="https://cdn.polyfill.io/v2/polyfill.min.js"></script>
+<script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default-3.3"></script>
 ```
 
 [Polyfill.io](https://polyfill.io/v2/docs/examples) reads the `User-Agent`
@@ -609,62 +608,6 @@ to the url, for example:
 
 Read the list of available features:
 [Features and Browsers Supported](https://polyfill.io/v2/docs/features/).
-
-[&#9751; Back to Index](#content)
-
-## Running the project
-
-If you want to fork or build your own, you must run this project.
-
-### Requirements
-
-1. Git on [linux](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
-   or [windows](https://git-for-windows.github.io/).
-1. [Node.js](https://nodejs.org/en/) (latest stable version v6+).<br>
-   It is preferable install [nvm](https://github.com/creationix/nvm)
-   (node version manager).
-1. [Yarn](https://yarnpkg.com/en/docs/cli/) installed as global package.
-
-**NOTE**: Consider install Node Version Manager (**nvm**) to upgrade easily
-the Node version.<br>Go to https://github.com/creationix/nvm and check the
-installation process for your OS.
-
-If you are running Windows, you can install [nvm-windows]. Follow every
-step mentioned [here][nvm-windows-install] so that **nvm** will be correctly
-installed to manage multiple installations of **Node** (with **npm**)
-on a Windows computer.
-
-### Building the project
-
-Clone the repository:
-
-```shell
-$ git https://github.com/jherax/proxy-storage.git
-```
-
-If you don't have installed `yarn` as a global package, run this command:
-
-```shell
-$ npm install -g yarn
-```
-
-Now `yarn` will install dependencies in [`package.json`](package.json):
-
-```shell
-$ yarn
-```
-
-And finally execute the webpack task:
-
-```shell
-$ yarn run build
-```
-
-This command will lint the code with
-[ESLint](http://eslint.org/docs/user-guide/getting-started)
-and transpile the source files from `src/` to `dist/` as an [UMD] with
-[Babel](https://babeljs.io/). It also generates the minified and source map
-files.
 
 [&#9751; Back to Index](#content)
 
@@ -712,5 +655,3 @@ repository. See [LICENSE](LICENSE) file for more information.
 [CommonJS]: https://blog.risingstack.com/node-js-at-scale-module-system-commonjs-require/
 [ES2015 Export]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export
 [AMD RequireJS]: http://requirejs.org/docs/api.html#jsfiles
-[nvm-windows]: https://github.com/coreybutler/nvm-windows#node-version-manager-nvm-for-windows
-[nvm-windows-install]: https://github.com/coreybutler/nvm-windows#installation--upgrades

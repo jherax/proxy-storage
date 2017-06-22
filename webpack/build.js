@@ -6,6 +6,19 @@ const PATHS = require('./paths');
 const banner = `proxyStorage@v${version}. Jherax 2017. Visit https://github.com/jherax/proxy-storage`;
 const test = /\.min.js($|\?)/i;
 
+/**
+ * Should include a version with polyfills?
+ *
+ * Object.hasOwnProperty
+ * Object.defineProperty
+ * Object.assign
+ * Object.keys
+ * Array.forEach
+ * Array.reduce
+ * Array.find
+ * String.trim
+ */
+
 const config = {
   entry: {
     'proxy-storage': PATHS.source.js,
@@ -21,13 +34,14 @@ const config = {
     rules: [
       {
         test: PATHS.source.folder,
+        exclude: /node_modules/,
         loader: 'babel-loader',
       },
       {
         test: PATHS.source.folder,
         exclude: /node_modules/,
-        enforce: 'pre', // preLoaders
         loader: 'eslint-loader',
+        enforce: 'pre',
         options: {
           // https://github.com/MoOx/eslint-loader
           configFile: '.eslintrc.json',
@@ -50,7 +64,7 @@ const config = {
       // https://github.com/mishoo/UglifyJS2#compress-options
       compress: {
         warnings: true,
-        dead_code: true, // remove unreachable code
+        dead_code: true,
         drop_debugger: true,
         pure_funcs: ['console.log'],
       },
@@ -59,7 +73,7 @@ const config = {
       },
     }),
     new webpack.BannerPlugin({banner, raw: false, entryOnly: true}),
-    // https://webpack.github.io/docs/list-of-plugins.html#sourcemapdevtoolplugin
+    // https://webpack.js.org/plugins/source-map-dev-tool-plugin/
     new webpack.SourceMapDevToolPlugin({
       test,
       filename: '[name].map',
