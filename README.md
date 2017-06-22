@@ -36,7 +36,7 @@ modify the values to read, write, or delete.
    1. [Interceptors](#interceptors)
 1. [API: configStorage](#configstorage)
 1. [API: isAvailable](#isavailable)
-1. [Shimming-polyfills](#shimming-polyfills)
+1. [Shimming Polyfills](#polyfills)
 1. [Running the project](#running-the-project)
 
 ## Installing the library
@@ -122,6 +122,8 @@ require(['proxy-storage'], function(proxyStorage) {
 
 See an example with RequireJS here: http://jsfiddle.net/FdKTn/71/
 
+[&#9751; Back to Index](#content)
+
 # API
 
 The exposed API manages an adapter that stores the data
@@ -173,14 +175,10 @@ The availability of the storage mechanisms is determined in the following order:
    data in the current session (browser tab)
 
 As the `storage` object is a proxy of the first storage mechanism available,
-that means if `localStorage` is available to set and retreive data, then the
-`storage` object will be an instance of `WebStorage` handling `localStorage`,
-otherwise, if `localStorage` is not available, but `sessionStorage` does, then
-`storage` will be an instance of `WebStorage` handling `sessionStorage`, and
-again, if `sessionStorage` is not available, but `cookieStorage` does, then
-`storage` will be an instance of `WebStorage` handling `cookieStorage`.
-Finally, if none of the previous mechanisms are available, then the `storage`
-object will handle the `memoryStorage` as a fallback.
+that means if `localStorage` is available to set and retreive data, it will be
+used, otherwise, if `localStorage` is not available, then it will try to use
+`cookieStorage`, and finally if none of the above are available, then the
+`storage` object will handle the `memoryStorage` as fallback.
 
 **Example**
 
@@ -211,6 +209,8 @@ console.log(storage.getItem('o-really'));
 **ProTip**: you can override the default storage mechanism by calling
 the method [configStorage.set()](#configstorage)
 
+[&#9751; Back to Index](#content)
+
 ## WebStorage
 
 **_@type_ `Class`**
@@ -220,17 +220,21 @@ that allows saving `Object` and `Array<Any>` values as **JSON**. It also
 lets you register [interceptors](#interceptors) for the methods `setItem`,
 `getItem`, `removeItem` and `clear`.
 
-This is the signature:
+This is the usage:
 
 ```javascript
 var instance = new WebStorage(storageType)
 ```
 
 Where **`storageType`** is a `string` that describes the type of storage
-to manage. It can be one of the following values: `"localStorage"`,
-`"sessionStorage"`, `"cookieStorage"`, or `"memoryStorage"`.
+to manage. It can be one of the following values:
 
-Each instance inherits the following members:
+- `"localStorage"`
+- `"cookieStorage"`
+- `"sessionStorage"`
+- `"memoryStorage"`
+
+Each instance inherits the following properties:
 
 - **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.
   <br>The `options` parameter is used only with instances of `cookieStorage`.
@@ -282,27 +286,29 @@ import { WebStorage, isAvailable } from 'proxy-storage';
  console.dir(sessionStore);
 ```
 
+[&#9751; Back to Index](#content)
+
 ### Handling cookies
 
 When you create an instance of `WebStorage` with `cookieStorage`, the
 method `setItem()` receives an optional argument as the last parameter,
-that configures the way how the cookie is stored.
+it configures the way how the cookie is stored.
 
 Signature of `setItem`:
 
 ```javascript
-instance.setItem(key, value, options)
+instance.setItem(key: String, value: Any, options: Object) : void
 ```
 
 Where the **`options`** parameter is an `object` with the following properties:
 
 - `domain`_`{string}`_: the domain or subdomain where the cookie will be valid.
 - `path`_`{string}`_: relative path where the cookie is valid. _Default `"/"`_
-- `secure`_`{boolean}`_: if provided, sets a secure cookie (HTTPS).
-- `expires`_`{Date, object}`_: the expiration date of the cookie.
+- `secure`_`{boolean}`_: if provided, creates a secure cookie, over HTTPS.
+- `expires`_`{Date, object}`_: the cookie expiration date.
   You can pass an object describing the expiration:
   - `date`_`{Date}`_: if provided, this date will be applied, otherwise the
-    current date will be used.
+    current date is used.
   - `minutes`_`{number}`_: minutes to add / subtract
   - `hours`_`{number}`_: hours to add / subtract
   - `days`_`{number}`_: days to add / subtract
@@ -345,19 +351,18 @@ cookieStore.setItem('testing3', 3, {
 });
 ```
 
-**Important**: Take into account that if you want to modify or remove a cookie
-that was created with a specific `path` or `domain` / subdomain, you need to
-explicitate the domain attribute in the `options` when calling
-`setItem(key, value, options)` or `removeItem(key, options)`.
+**Important**: Take into account that if you want to **modify** or **remove**
+a cookie that was created under specific `path` or `domain` (subdomain), you
+need to specify the `domain` or `path` attributes in the `options` parameter
+when calling `setItem(key, value, options)` or `removeItem(key, options)`.
+
+If you have created the cookie with **proxyStorage**, it will handle the
+metadata internally, so that you can call `removeItem(key)` with no more
+arguments.
 
 ![cookies](https://www.dropbox.com/s/wlvgm0t8xc07me1/cookies-metadata.gif?dl=1)
 
-If you have created the cookie with **proxyStorage**, it will handle the
-metadata internally, so that you can call `removeItem(key)` safely.
-
-But if you want to modify / remove a cookie that was created from another page,
-then you should provide the metadata as `path` or `domain` in order to match
-the right cookie:
+Otherwise you need to provide the metadata `path` or `domain` as mentioned before:
 
 ```javascript
 // change the value of an external cookie in /answers
@@ -371,11 +376,16 @@ cookieStore.removeItem('optimizelyEndUserId', {
 });
 ```
 
+[&#9751; Back to Index](#content)
+
 ### Looping the storage
 
-You can loop over the items in the storage instance, e.g.
-`localStorage`, `sessionStorage`, `cookieStorage`, or `memoryStorage`,
-but it is not a good practice, see the Important note below.
+You can loop over the items in the `storage` instance,
+but it is not recommended to rely on it because navigable
+items in the `storage` instance are not synchronized with
+external changes, for example, a cookie has expired, or a
+cookie/localStorage element was created/deleted from another
+page with the same domain/subdomain.
 
 ```javascript
 const sessionStore = new WebStorage('sessionStorage');
@@ -383,39 +393,38 @@ const sessionStore = new WebStorage('sessionStorage');
 sessionStore.setItem('test1', 1);
 sessionStore.setItem('test2', 2);
 
-// loop over the storage object
+// loop over the storage object (not recommended)
 Object.keys(sessionStore).forEach((key) => {
   console.log(key, sessionStore[key]);
 });
 
-// or...
+// or this way (not recommended) ...
 for (let key in sessionStore) {
   console.log(key, sessionStore[key]);
 }
 ```
 
-**Important**: Although you can loop over the storage items, it is
-recommended to use the API methods instead, this is because navigable
-items in the storage instance are not synchronized for external changes,
-e.g. a domain cookie was created from another page, or a cookie has expired.
+It is also applied not only when reading, but also when writing to storage:
 
 ```javascript
-// not recommended, they are not synchronized
+// not recommended: not synchronized
 var title = cookieStorage['title'];
 var session = cookieStorage.sessionId;
 cookieStorage['sessionId'] = 'E6URTG5';
 
-// the good way, it tracks external changes
+// good practice: sync external changes
 var title = cookieStorage.getItem('title');
 var session = cookieStorage.getItem('sessionId');
 cookieStorage.setItem('sessionId', 'E6URTG5');
 ```
 
+[&#9751; Back to Index](#content)
+
 ### Clearing data
 
 You can use the `removeItem(key)` method to delete a specific item in
 the storage instance, or use the `clear()` method to remove all items
-in the storage instance.
+in the storage instance, e.g.
 
 ```javascript
 import { WebStorage } from 'proxy-storage';
@@ -426,6 +435,8 @@ function clearAllStorages() {
   new WebStorage('cookieStorage').clear();
 }
 ```
+
+[&#9751; Back to Index](#content)
 
 ### Interceptors
 
@@ -450,7 +461,7 @@ import storage, { WebStorage } from 'proxy-storage';
 // adds first interceptor for 'setItem'
 WebStorage.interceptors('setItem', (key, value/*, options*/) => {
   if (key === 'storage-test') {
-    // transform the 'id' property by encoding it to base64
+    // encodes the 'id' to base64
     value.id = btoa(value.id);
     return value;
   }
@@ -466,7 +477,7 @@ WebStorage.interceptors('setItem', (key, value) => {
 // adds first interceptor for 'getItem'
 WebStorage.interceptors('getItem', (key, value) => {
   if (key === 'storage-test') {
-    // decodes from base64 the 'id' property
+    // decodes from base64
     value.id = +atob(value.id);
   }
   return value;
@@ -484,6 +495,8 @@ console.log(data);
 // storage.removeItem('storage-test');
 ```
 
+[&#9751; Back to Index](#content)
+
 ## configStorage
 
 **_@type_ `Object`**
@@ -494,7 +507,8 @@ It contains the following methods:
 - **`get`**`()`: returns a `string` with the name of the current storage mechanism.
 - **`set`**`(storageType)`: sets the current storage mechanism. `storageType`
   must be one of the following strings: `"localStorage"`, `"sessionStorage"`,
-  `"cookieStorage"`, or `"memoryStorage"`.
+  `"cookieStorage"`, or `"memoryStorage"`. If the storage type provided is
+  not valid, it will throw an exception.
 
 **Example**
 
@@ -513,16 +527,19 @@ storageName = configStorage.get();
 console.log('Current:', storageName);
 
 // if you are running in the browser,
-// you must update the alias of the storage:
+// you MUST update the alias of the storage:
 // storage = proxyStorage.default;
 storage.setItem('currentStorage', storageName);
 ```
+
+[&#9751; Back to Index](#content)
 
 ## isAvailable
 
 **_@type_ `Object`**
 
-Determines which storage mechanisms are available to read/write/delete data.
+Determines which storage mechanisms are available to read, write, or delete.
+
 It contains the following flags:
 
 - **`localStorage`**: is set to `true` if the local storage is available.
@@ -555,7 +572,9 @@ if (!data) {
 console.log('in memoryStorage', data);
 ```
 
-## Shimming-polyfills
+[&#9751; Back to Index](#content)
+
+## Polyfills
 
 This library is written using some of the new ES5/ES6 features. If you have
 to support Non-standard-compliant browsers like Internet Explorer, you can
@@ -590,6 +609,8 @@ to the url, for example:
 
 Read the list of available features:
 [Features and Browsers Supported](https://polyfill.io/v2/docs/features/).
+
+[&#9751; Back to Index](#content)
 
 ## Running the project
 
@@ -645,6 +666,8 @@ and transpile the source files from `src/` to `dist/` as an [UMD] with
 [Babel](https://babeljs.io/). It also generates the minified and source map
 files.
 
+[&#9751; Back to Index](#content)
+
 ## Versioning
 
 This projects adopts the [Semantic Versioning](http://semver.org/)
@@ -659,6 +682,8 @@ Given a version number MAJOR.MINOR.PATCH, increment the:
 1. MAJOR version when you make incompatible API changes.
 1. MINOR version when you add functionality in a backwards-compatible manner.
 1. PATCH version when you make backwards-compatible bug fixes.
+
+[&#9751; Back to Index](#content)
 
 ## Issues
 
