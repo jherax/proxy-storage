@@ -1,26 +1,5 @@
 import cookieStorage from './cookie-storage';
 import memoryStorage from './memory-storage';
-import {setProperty} from './utils';
-
-/**
- * @private
- *
- * Copy the current items in the storage mechanism.
- *
- * @param  {object} api: the storage mechanism to initialize
- * @return {object}
- */
-function initApi(api) {
-  if (!api.initialize) return api;
-  // sets API members to read-only and non-enumerable
-  for (let prop in api) { // eslint-disable-line
-    if (prop !== 'initialize') {
-      setProperty(api, prop);
-    }
-  }
-  api.initialize();
-  return api;
-}
 
 /**
  * @public
@@ -36,6 +15,6 @@ function initApi(api) {
 export const proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
-  cookieStorage: initApi(cookieStorage()),
-  memoryStorage: initApi(memoryStorage()),
+  cookieStorage: cookieStorage(),
+  memoryStorage: memoryStorage(),
 };

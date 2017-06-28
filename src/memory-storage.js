@@ -1,3 +1,5 @@
+import {setProperty} from './utils';
+
 /**
  * @private
  *
@@ -5,13 +7,15 @@
  *
  * @return {object}
  */
-function getStoreFromWindow() { // eslint-disable-line
+function getStoreFromWindow() {
+  let store;
   try {
-    const store = JSON.parse(window.self.name);
-    if (store && typeof store === 'object') return store;
+    store = JSON.parse(window.self.name);
   } catch (e) {
     return {};
   }
+  if (store && typeof store === 'object') return store;
+  return {};
 }
 
 /**
@@ -59,14 +63,26 @@ export default function memoryStorage() {
       Object.keys(hashtable).forEach(key => delete hashtable[key]);
       setStoreToWindow(hashtable);
     },
-
-    initialize() {
-      // copies all existing elements in the storage
-      Object.assign(api, hashtable);
-      // this method is removed after being invoked
-      // because is not part of the Web Storage interface
-      delete api.initialize;
-    },
   };
+
+  return initialize(api, hashtable);
+}
+
+/**
+ * @private
+ *
+ * Copy the current items in the cookie storage.
+ *
+ * @param  {object} api: the storage mechanism to initialize
+ * @param  {object} hashtable: store from the window tab
+ * @return {object}
+ */
+function initialize(api, hashtable) {
+  // sets API members to read-only and non-enumerable
+  for (let prop in api) { // eslint-disable-line
+    setProperty(api, prop);
+  }
+  // copies all existing elements in the storage
+  Object.assign(api, hashtable);
   return api;
 }

@@ -1,4 +1,6 @@
-import {alterDate, isObject} from './utils';
+import {isObject, setProperty} from './utils';
+import formatMetadata from './format-metadata';
+import buildExpiration from './expiration-date';
 
 /**
  * @private
@@ -17,54 +19,6 @@ const $cookie = {
   },
   data: {}, // metadata associated to the cookies
 };
-
-/**
- * @private
- *
- * Builds the expiration for the cookie.
- *
- * @see utils.alterDate(options)
- *
- * @param  {Date|object} date: the expiration date
- * @return {string}
- */
-function buildExpirationString(date) {
-  const expires = (date instanceof Date ?
-    alterDate({date}) :
-    alterDate(date)
-  );
-  return expires.toUTCString();
-}
-
-/**
- * @private
- *
- * Builds the string for the cookie metadata.
- *
- * @param  {string} key: name of the metadata
- * @param  {object} data: metadata of the cookie
- * @return {string}
- */
-function buildMetadataFor(key, data) {
-  if (!data[key]) return '';
-  return `;${key}=${data[key]}`;
-}
-
-/**
- * @private
- *
- * Builds the whole string for the cookie metadata.
- *
- * @param  {object} data: metadata of the cookie
- * @return {string}
- */
-function formatMetadata(data) {
-  const expires = buildMetadataFor('expires', data);
-  const domain = buildMetadataFor('domain', data);
-  const path = buildMetadataFor('path', data);
-  const secure = data.secure ? ';secure' : '';
-  return `${expires}${domain}${path}${secure}`;
-}
 
 /**
  * @private
@@ -88,7 +42,7 @@ function findCookie(cookie) {
  *
  * @return {object}
  */
-export default function cookieStorage() {
+function cookieStorage() {
   const api = {
 
     setItem(key, value, options) {
@@ -97,7 +51,7 @@ export default function cookieStorage() {
       $cookie.data[key] = {path: options.path};
       const metadata = $cookie.data[key];
       if (isObject(options.expires) || options.expires instanceof Date) {
-        metadata.expires = buildExpirationString(options.expires);
+        metadata.expires = buildExpiration(options.expires);
       }
       if (options.domain && typeof options.domain === 'string') {
         metadata.domain = options.domain.trim();
@@ -129,7 +83,7 @@ export default function cookieStorage() {
     },
 
     clear() {
-      let key, indexEQ; // eslint-disable-line
+      let key, indexEQ;
       $cookie.get().split(';').forEach((cookie) => {
         indexEQ = cookie.indexOf('=');
         if (indexEQ > -1) {
@@ -139,19 +93,35 @@ export default function cookieStorage() {
         }
       });
     },
-
-    initialize() {
-      // copies all existing elements in the storage
-      $cookie.get().split(';').forEach((cookie) => {
-        const index = cookie.indexOf('=');
-        const key = cookie.substring(0, index).trim();
-        const value = cookie.substring(index + 1).trim();
-        if (key) api[key] = decodeURIComponent(value);
-      });
-      // this method is removed after being invoked
-      // because is not part of the Web Storage interface
-      delete api.initialize;
-    },
   };
+
+  return initialize(api);
+}
+
+/**
+ * @private
+ *
+ * Copy the current items in the cookie storage.
+ *
+ * @param  {object} api: the storage mechanism to initialize
+ * @return {object}
+ */
+function initialize(api) {
+  // sets API members to read-only and non-enumerable
+  for (let prop in api) { // eslint-disable-line
+    setProperty(api, prop);
+  }
+  // copies all existing elements in the storage
+  $cookie.get().split(';').forEach((cookie) => {
+    const index = cookie.indexOf('=');
+    const key = cookie.substring(0, index).trim();
+    const value = cookie.substring(index + 1).trim();
+    if (key) api[key] = decodeURIComponent(value);
+  });
   return api;
 }
+
+/**
+ * @public API
+ */
+export default cookieStorage;

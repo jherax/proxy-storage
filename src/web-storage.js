@@ -1,6 +1,7 @@
-import {proxy} from './proxy-mechanism';
-import {setProperty, checkEmpty} from './utils';
+import executeInterceptors, {INTERCEPTORS} from './interceptors';
+import {setProperty, checkEmpty, tryParse} from './utils';
 import {isAvailable} from './is-available';
+import {proxy} from './proxy-mechanism';
 
 /**
  * @private
@@ -9,21 +10,7 @@ import {isAvailable} from './is-available';
  *
  * @type {object}
  */
-const _instances = {};
-
-/**
- * @private
- *
- * Stores the interceptors for WebStorage methods.
- *
- * @type {object}
- */
-const _interceptors = {
-  setItem: [],
-  getItem: [],
-  removeItem: [],
-  clear: [],
-};
+const INSTANCES = {};
 
 /**
  * @private
@@ -32,62 +19,22 @@ const _interceptors = {
  *
  * @type {RegExp}
  */
-const bannedKeys = /^(?:expires|max-age|path|domain|secure)$/i;
+const BANNED_KEYS = /^(?:expires|max-age|path|domain|secure)$/i;
 
 /**
  * @private
  *
- * Executes the interceptors for a WebStorage method and
- * allows the transformation in chain of the value passed through.
+ * Copies all existing keys in the storage.
  *
- * @param  {string} command: name of the method to intercept
- * @return {any}
- */
-function executeInterceptors(command, ...args) {
-  const key = args.shift();
-  let value = args.shift();
-  if (value && typeof value === 'object') {
-    // clone the object to prevent mutations
-    value = JSON.parse(JSON.stringify(value));
-  }
-  return _interceptors[command].reduce((val, action) => {
-    const transformed = action(key, val, ...args);
-    if (transformed == null) return val;
-    return transformed;
-  }, value);
-}
-
-/**
- * @private
- *
- * Try to parse a value
- *
- * @param  {string} value: the value to parse
- * @return {any}
- */
-function tryParse(value) {
-  let parsed;
-  try {
-    parsed = JSON.parse(value);
-  } catch (e) {
-    parsed = value;
-  }
-  return parsed;
-}
-
-/**
- * @private
- *
- * Copies all existing keys in the WebStorage instance.
- *
- * @param  {WebStorage} instance: the instance to where copy the keys
+ * @param  {CookieStorage} instance: the object to where copy the keys
  * @param  {object} storage: the storage mechanism
- * @return {void}
+ * @return {object}
  */
 function copyKeys(instance, storage) {
   Object.keys(storage).forEach((key) => {
     instance[key] = tryParse(storage[key]);
   });
+  return instance;
 }
 
 /**
@@ -112,8 +59,8 @@ const webStorageSettings = {
  */
 function storageAvailable(storageType) {
   if (webStorageSettings.isAvailable[storageType]) return storageType;
-  const fallback = (storageType === 'sessionStorage' ?
-    'memoryStorage' : webStorageSettings.default);
+  const fallback =
+    storageType === 'sessionStorage' ? 'memoryStorage' : webStorageSettings.default;
   const msg = `${storageType} is not available. Falling back to ${fallback}`;
   console.warn(msg); // eslint-disable-line
   return fallback;
@@ -147,15 +94,13 @@ class WebStorage {
     // if the storage is not available, sets the default
     storageType = storageAvailable(storageType);
     // keeps only one instance by storageType (singleton)
-    const cachedInstance = _instances[storageType];
+    const cachedInstance = INSTANCES[storageType];
     if (cachedInstance) {
-      copyKeys(cachedInstance, storage);
-      return cachedInstance;
+      return copyKeys(cachedInstance, storage);
     }
     setProperty(this, '__storage__', storageType);
     // copies all existing keys in the storage mechanism
-    copyKeys(this, storage);
-    _instances[storageType] = this;
+    INSTANCES[storageType] = copyKeys(this, storage);
   }
 
   /**
@@ -171,7 +116,7 @@ class WebStorage {
   setItem(key, value, options) {
     checkEmpty(key);
     const storageType = this.__storage__;
-    if (storageType === 'cookieStorage' && bannedKeys.test(key)) {
+    if (storageType === 'cookieStorage' && BANNED_KEYS.test(key)) {
       throw new Error('The key is a reserved word, therefore not allowed');
     }
     const v = executeInterceptors('setItem', key, value, options);
@@ -197,7 +142,7 @@ class WebStorage {
   getItem(key) {
     checkEmpty(key);
     let value = proxy[this.__storage__].getItem(key);
-    if (value == null) {
+    if (value == null) { // null or undefined
       delete this[key];
       value = null;
     } else {
@@ -261,8 +206,8 @@ class WebStorage {
    * @memberOf WebStorage
    */
   static interceptors(command, action) {
-    if (command in _interceptors && typeof action === 'function') {
-      _interceptors[command].push(action);
+    if (command in INTERCEPTORS && typeof action === 'function') {
+      INTERCEPTORS[command].push(action);
     }
   }
 }

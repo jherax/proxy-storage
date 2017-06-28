@@ -3,7 +3,7 @@
 <!-- markdownlint-disable MD014 MD025 MD033 MD034 MD036 -->
 
 This library manages an adapter that implements an interface similar to
-[Web Storage] to normalize the API for [document.cookie],
+[Web Storage] to normalize the API for [document.cookie] to be as
 [window.localStorage] and [window.sessionStorage].
 
 One of the advantages of this library is that the adapter stores the data
@@ -11,18 +11,18 @@ as **JSON**, allowing to save `Object` and `Array<Any>` values, which
 is not the default behavior when using the native `window.localStorage`,
 `window.sessionStorage` or `document.cookie` storages.
 
-It also provides a new [`memoryStorage`](#storage-or-default) mechanism that
-persists the data in memory (current browser tab), even if a forced refresh
-is done on the page. It is a mimic of `sessionStorage` and it could be used
-as fallback when the other storage mechanisms are not available, for example,
-some browsers navigating in private mode.
+It also provides a new mechanism -- [`memoryStorage`](#storage-or-default),
+that persists the data in memory (for current browser-tab), even if a forced
+refresh is done on the page. It is a mimic of `sessionStorage` and it could
+be used as fallback when the other storage mechanisms are not available, for
+example, some browsers navigating in private mode.
 Read more about [window.sessionStorage].
 
 Another advantage with **proxy-storage** is that you can register
-[interceptors](#interceptors) as callback functions on the
-[WebStorage](#webstorage) prototype methods: `setItem`, `getItem`,
-`removeItem`, and `clear`, giving you the ability to intercept and
-modify the values to read, write, or delete.
+[interceptors](#interceptors) as functions for the prototype methods of
+[WebStorage](#webstorage) class: `setItem`, `getItem`, `removeItem`, and
+`clear`, giving you the ability to intercept and modify the values to read,
+write, or delete.
 
 ## Content
 
@@ -40,7 +40,7 @@ modify the values to read, write, or delete.
 
 ## Installing the library
 
-To include this library into your package manager with `npm` or `yarn`
+To include this library into your package manager with `npm` or `yarn`, run:
 
 ```shell
 # with npm
@@ -59,7 +59,7 @@ $ yarn add proxy-storage
 <script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.2.0/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.3.0/dist/proxy-storage.min.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -98,7 +98,7 @@ import storage from 'proxy-storage';
 
 // or get some API members
 import storage, { WebStorage, configStorage } from 'proxy-storage';
-const cookieStore = new WebStorage('memoryStorage');
+const cookieStore = new WebStorage('cookieStorage');
 ```
 
 ### AMD
@@ -119,7 +119,7 @@ require(['proxy-storage'], function(proxyStorage) {
 });
 ```
 
-See an example with RequireJS here: http://jsfiddle.net/FdKTn/71/
+See an example with RequireJS here: http://jsfiddle.net/FdKTn/77/
 
 [&#9751; Back to Index](#content)
 
@@ -131,7 +131,7 @@ as **JSON**, allowing to save and retrieve **primitive**,
 
 It also provides a new storage mechanism called **`memoryStorage`**
 which persists the data in memory (current tab in the browser), even
-if a forced refresh is done (similar to `sessionStorage`).
+if a forced refresh is done on the page, as `sessionStorage` does.
 
 The [`WebStorage`](#webstorage) class has a static member called
 [`interceptors`](#interceptors) which lets you to register callback
@@ -158,7 +158,7 @@ the prototype:
   <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
 - **`clear`**`()`: removes all items from the storage instance.
-- **`length`**: gets the number of items stored in the storage instance.
+- **`length`**: gets the number of items stored in the instance.
 
 The `storage` object is a proxy for the first storage mechanism available,
 usually `localStorage`, which is established when the library is initialized.
@@ -173,22 +173,22 @@ The availability of the storage mechanisms is determined in the following order:
    of `memoryStorage` is similar to `sessionStorage`, which let you to persist
    data in the current session (browser tab)
 
-As the `storage` object is a proxy of the first storage mechanism available,
-that means if `localStorage` is available to set and retreive data, it will be
-used, otherwise, if `localStorage` is not available, then it will try to use
-`cookieStorage`, and finally if none of the above are available, then the
-`storage` object will handle the `memoryStorage` as fallback.
+**Important**: As the `storage` object is a proxy for the first storage
+mechanism available, that means if `localStorage` is available to read and
+write data, it will be used, otherwise, if `localStorage` is not available,
+then `cookieStorage` will be used, and finally if none of the above are
+available, `memoryStorage` will be the fallback mechanism.
 
 **Example**
 
 ```javascript
 import storage from 'proxy-storage';
-// 'storage' is the default module
+// for browser: storage = proxyStorage.default;
 
 // use the default storage mechanism, usually localStorage
-storage.setItem('qwerty', [{ some: 'object', garbage: true }]);
+storage.setItem('qwerty', [{ garbage: true, some: 'object' }]);
 console.log(storage.getItem('qwerty'));
-// [{ some: 'object', garbage: true }]
+// [{ garbage: true, some: 'object' }]
 
 storage.setItem('persisted', true);
 storage.setItem('o-really', { status: 'saved' });
@@ -201,8 +201,7 @@ console.log(storage.getItem('qwerty'));
 // removes all data in the current storage
 storage.clear();
 console.log(`items: ${storage.length}`);
-console.log(storage.getItem('o-really'));
-// null
+// items: 0
 ```
 
 **ProTip**: you can override the default storage mechanism by calling
@@ -243,7 +242,7 @@ Each instance inherits the following properties:
   <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
 - **`clear`**`()`: removes all items from the storage instance.
-- **`length`**: gets the number of items stored in the storage instance.
+- **`length`**: gets the number of items stored in the instance.
 
 You can create multiple instances of `WebStorage` to handle different
 storage mechanisms. For example, to store data in `cookies` and also in
@@ -251,6 +250,9 @@ storage mechanisms. For example, to store data in `cookies` and also in
 
 ```javascript
 import storage, { WebStorage } from 'proxy-storage';
+// for browser:
+// var storage = proxyStorage.default;
+// var WebStorage = proxyStorage.WebStorage;
 
 // use the default storage mechanism, usually localStorage
 storage.setItem('tv-show', { name: 'Regular Show' });
@@ -265,13 +267,16 @@ const cookieStore = new WebStorage('cookieStorage');
 cookieStore.setItem('character', { name: 'Rigby' }, options);
 ```
 
-**Important**: If you request an instance of a storage mechanism that are not
+**Important**: If you request an instance of a storage mechanism that is not
 available, you will get an instance of the first storage mechanism available,
-this is in order to keep storing data. It is useful when you rely on a
+so you can continue storing data. It is useful when you rely on a
 specific storage mechanism. Let's see an example:
 
 ```javascript
 import { WebStorage, isAvailable } from 'proxy-storage';
+// for browser:
+// var WebStorage = proxyStorage.WebStorage;
+// var isAvailable = proxyStorage.isAvailable;
 
  // let's suppose the following storage is not available
  isAvailable.sessionStorage = false;
@@ -280,8 +285,8 @@ import { WebStorage, isAvailable } from 'proxy-storage';
  // sessionStorage is not available. Falling back to memoryStorage
  sessionStore.setItem('ulugrun', 3.1415926);
 
- // as sessionStorage is not available, the instance obtained
- // is the first storage mechanism available: memoryStorage
+ // as sessionStorage is not available, the instance
+ // obtained is the fallback mechanism: memoryStorage
  console.dir(sessionStore);
 ```
 
@@ -290,8 +295,8 @@ import { WebStorage, isAvailable } from 'proxy-storage';
 ### Handling cookies
 
 When you create an instance of `WebStorage` with `cookieStorage`, the
-method `setItem()` receives an optional argument as the last parameter,
-it configures the way how the cookie is stored.
+method `setItem()` receives an optional argument as the last parameter
+that configures the way how the cookie is stored.
 
 Signature of `setItem`:
 
@@ -303,7 +308,7 @@ Where the **`options`** parameter is an `object` with the following properties:
 
 - `domain`_`{string}`_: the domain or subdomain where the cookie will be valid.
 - `path`_`{string}`_: relative path where the cookie is valid. _Default `"/"`_
-- `secure`_`{boolean}`_: if provided, creates a secure cookie, over HTTPS.
+- `secure`_`{boolean}`_: if provided, creates a secure cookie over HTTPS.
 - `expires`_`{Date, object}`_: the cookie expiration date.
   You can pass an object describing the expiration:
   - `date`_`{Date}`_: if provided, this date will be applied, otherwise the
@@ -318,6 +323,7 @@ Where the **`options`** parameter is an `object` with the following properties:
 
 ```javascript
 import { WebStorage } from 'proxy-storage';
+// for browser: WebStorage = proxyStorage.WebStorage;
 
 const cookieStore = new WebStorage('cookieStorage');
 
@@ -357,11 +363,10 @@ when calling `setItem(key, value, options)` or `removeItem(key, options)`.
 
 If you have created the cookie with **proxyStorage**, it will handle the
 metadata internally, so that you can call `removeItem(key)` with no more
-arguments.
+arguments. Otherwise you will need to provide the metadata **`path`** or
+**`domain`**:
 
 ![cookies](https://www.dropbox.com/s/wlvgm0t8xc07me1/cookies-metadata.gif?dl=1)
-
-Otherwise you need to provide the metadata `path` or `domain` as mentioned before:
 
 ```javascript
 // change the value of an external cookie in /answers
@@ -397,7 +402,7 @@ Object.keys(sessionStore).forEach((key) => {
   console.log(key, sessionStore[key]);
 });
 
-// or this way (not recommended) ...
+// or this way (not recommended either)
 for (let key in sessionStore) {
   console.log(key, sessionStore[key]);
 }
@@ -406,12 +411,12 @@ for (let key in sessionStore) {
 It is also applied not only when reading, but also when writing to storage:
 
 ```javascript
-// not recommended: not synchronized
+// not recommended: not synchronized with the real storage
 var title = cookieStorage['title'];
 var session = cookieStorage.sessionId;
 cookieStorage['sessionId'] = 'E6URTG5';
 
-// good practice: sync external changes
+// good practice: it is synchronized for external changes
 var title = cookieStorage.getItem('title');
 var session = cookieStorage.getItem('sessionId');
 cookieStorage.setItem('sessionId', 'E6URTG5');
@@ -427,6 +432,7 @@ in the storage instance, e.g.
 
 ```javascript
 import { WebStorage } from 'proxy-storage';
+// for browser: WebStorage = proxyStorage.WebStorage;
 
 function clearAllStorages() {
   new WebStorage('localStorage').clear();
@@ -434,6 +440,13 @@ function clearAllStorages() {
   new WebStorage('cookieStorage').clear();
 }
 ```
+
+**Important**: When handling `cookieStorage`, the method `clear()` only will
+remove the cookies with no metadata or those created through **proxyStorage**.
+Take into account that if you want to remove a cookie that was created from
+another page, you need to set the `domain` or `path` attributes in the
+`options` parameter when calling `removeItem(key, options)`.<br>
+See [handling-cookies](#handling-cookies).
 
 [&#9751; Back to Index](#content)
 
@@ -456,6 +469,9 @@ the _value_ passed and returned in each callback.
 
 ```javascript
 import storage, { WebStorage } from 'proxy-storage';
+// for browser:
+// var storage = proxyStorage.default;
+// var WebStorage = proxyStorage.WebStorage;
 
 // adds first interceptor for 'setItem'
 WebStorage.interceptors('setItem', (key, value/*, options*/) => {
@@ -500,11 +516,11 @@ console.log(data);
 
 **_@type_ `Object`**
 
-Gets and sets the storage mechanism to use by default.
-It contains the following methods:
+Sets the [default storage](##storage-or-default) mechanism, or get the current
+default storage mechanism. This object contains the following methods:
 
 - **`get`**`()`: returns a `string` with the name of the current storage mechanism.
-- **`set`**`(storageType)`: sets the current storage mechanism. `storageType`
+- **`set`**`(storageType)`: sets the default storage mechanism. `storageType`
   must be one of the following strings: `"localStorage"`, `"sessionStorage"`,
   `"cookieStorage"`, or `"memoryStorage"`. If the storage type provided is
   not valid, it will throw an exception.
@@ -513,6 +529,9 @@ It contains the following methods:
 
 ```javascript
 import storage, { configStorage } from 'proxy-storage';
+// for browser:
+// var storage = proxyStorage.default;
+// var configStorage = proxyStorage.configStorage;
 
 // gets the default storage mechanism
 let storageName = configStorage.get();
@@ -537,12 +556,13 @@ storage.setItem('currentStorage', storageName);
 
 **_@type_ `Object`**
 
-Determines which storage mechanisms are available to read, write, or delete.
+Determines which storage mechanisms are available to _read, write,_
+or _delete_ data.
 
 It contains the following flags:
 
 - **`localStorage`**: is set to `true` if the local storage is available.
-- **`cookieStorage`**: is set to `true` if the cookie storage is available.
+- **`cookieStorage`**: is set to `true` if the document cookies are available.
 - **`sessionStorage`**: is set to `true` if the session storage is available.
 - **`memoryStorage`**: always is set to `true`.
 
@@ -648,9 +668,9 @@ repository. See [LICENSE](LICENSE) file for more information.
 <!-- LINKS -->
 
 [Web Storage]: https://developer.mozilla.org/en-US/docs/Web/API/Storage
+[document.cookie]: https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
 [window.localStorage]: https://developer.mozilla.org/en-US/docs/Web/API/Window/localStorage
 [window.sessionStorage]: https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
-[document.cookie]: https://developer.mozilla.org/en-US/docs/Web/API/Document/cookie
 [UMD]: http://davidbcalhoun.com/2014/what-is-amd-commonjs-and-umd/
 [CommonJS]: https://blog.risingstack.com/node-js-at-scale-module-system-commonjs-require/
 [ES2015 Export]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export

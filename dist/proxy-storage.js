@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.2.0. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.3.0. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -85,9 +85,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.isObject = isObject;
-exports.alterDate = alterDate;
-exports.setProperty = setProperty;
 exports.checkEmpty = checkEmpty;
+exports.setProperty = setProperty;
+exports.tryParse = tryParse;
 /**
  * Determines whether a value is a plain object.
  *
@@ -99,30 +99,16 @@ function isObject(value) {
 }
 
 /**
- * Adds or subtracts date portions to the given date and returns the new date.
+ * Validates if the key is not empty.
+ * (null, undefined or empty string)
  *
- * @see https://gist.github.com/jherax/bbc43e479a492cc9cbfc7ccc20c53cd2
- *
- * @param  {object} options: It contains the date parts to add or remove, and can have the following properties:
- *         - {Date} date: if provided, this date will be affected, otherwise the current date will be used.
- *         - {number} minutes: minutes to add/subtract
- *         - {number} hours: hours to add/subtract
- *         - {number} days: days to add/subtract
- *         - {number} months: months to add/subtract
- *         - {number} years: years to add/subtract
- * @return {Date}
+ * @param  {string} key: keyname of an element in the storage mechanism
+ * @return {void}
  */
-function alterDate() {
-  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-  var opt = Object.assign({}, options);
-  var d = opt.date instanceof Date ? opt.date : new Date();
-  if (+opt.minutes) d.setMinutes(d.getMinutes() + opt.minutes);
-  if (+opt.hours) d.setHours(d.getHours() + opt.hours);
-  if (+opt.days) d.setDate(d.getDate() + opt.days);
-  if (+opt.months) d.setMonth(d.getMonth() + opt.months);
-  if (+opt.years) d.setFullYear(d.getFullYear() + opt.years);
-  return d;
+function checkEmpty(key) {
+  if (key == null || key === '') {
+    throw new Error('The key provided can not be empty');
+  }
 }
 
 /**
@@ -146,16 +132,19 @@ function setProperty(obj, name, value) {
 }
 
 /**
- * Validates if the key is not empty.
- * (null, undefined or empty string)
+ * Try to parse a value from JSON.
  *
- * @param  {string} key: keyname of an element in the storage mechanism
- * @return {void}
+ * @param  {string} value: the value to parse
+ * @return {any}
  */
-function checkEmpty(key) {
-  if (key == null || key === '') {
-    throw new Error('The key provided can not be empty');
+function tryParse(value) {
+  var parsed = void 0;
+  try {
+    parsed = JSON.parse(value);
+  } catch (e) {
+    parsed = value;
   }
+  return parsed;
 }
 
 /***/ }),
@@ -327,13 +316,17 @@ exports.proxy = exports.webStorageSettings = exports.default = undefined;
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _interceptors = __webpack_require__(4);
 
-var _proxyMechanism = __webpack_require__(4);
+var _interceptors2 = _interopRequireDefault(_interceptors);
 
 var _utils = __webpack_require__(0);
 
 var _isAvailable = __webpack_require__(1);
+
+var _proxyMechanism = __webpack_require__(5);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -344,21 +337,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  *
  * @type {object}
  */
-var _instances = {};
-
-/**
- * @private
- *
- * Stores the interceptors for WebStorage methods.
- *
- * @type {object}
- */
-var _interceptors = {
-  setItem: [],
-  getItem: [],
-  removeItem: [],
-  clear: []
-};
+var INSTANCES = {};
 
 /**
  * @private
@@ -367,66 +346,22 @@ var _interceptors = {
  *
  * @type {RegExp}
  */
-var bannedKeys = /^(?:expires|max-age|path|domain|secure)$/i;
+var BANNED_KEYS = /^(?:expires|max-age|path|domain|secure)$/i;
 
 /**
  * @private
  *
- * Executes the interceptors for a WebStorage method and
- * allows the transformation in chain of the value passed through.
+ * Copies all existing keys in the storage.
  *
- * @param  {string} command: name of the method to intercept
- * @return {any}
- */
-function executeInterceptors(command) {
-  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
-    args[_key - 1] = arguments[_key];
-  }
-
-  var key = args.shift();
-  var value = args.shift();
-  if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
-    // clone the object to prevent mutations
-    value = JSON.parse(JSON.stringify(value));
-  }
-  return _interceptors[command].reduce(function (val, action) {
-    var transformed = action.apply(undefined, [key, val].concat(args));
-    if (transformed == null) return val;
-    return transformed;
-  }, value);
-}
-
-/**
- * @private
- *
- * Try to parse a value
- *
- * @param  {string} value: the value to parse
- * @return {any}
- */
-function tryParse(value) {
-  var parsed = void 0;
-  try {
-    parsed = JSON.parse(value);
-  } catch (e) {
-    parsed = value;
-  }
-  return parsed;
-}
-
-/**
- * @private
- *
- * Copies all existing keys in the WebStorage instance.
- *
- * @param  {WebStorage} instance: the instance to where copy the keys
+ * @param  {CookieStorage} instance: the object to where copy the keys
  * @param  {object} storage: the storage mechanism
- * @return {void}
+ * @return {object}
  */
 function copyKeys(instance, storage) {
   Object.keys(storage).forEach(function (key) {
-    instance[key] = tryParse(storage[key]);
+    instance[key] = (0, _utils.tryParse)(storage[key]);
   });
+  return instance;
 }
 
 /**
@@ -488,15 +423,13 @@ var WebStorage = function () {
     // if the storage is not available, sets the default
     storageType = storageAvailable(storageType);
     // keeps only one instance by storageType (singleton)
-    var cachedInstance = _instances[storageType];
+    var cachedInstance = INSTANCES[storageType];
     if (cachedInstance) {
-      copyKeys(cachedInstance, storage);
-      return cachedInstance;
+      return copyKeys(cachedInstance, storage);
     }
     (0, _utils.setProperty)(this, '__storage__', storageType);
     // copies all existing keys in the storage mechanism
-    copyKeys(this, storage);
-    _instances[storageType] = this;
+    INSTANCES[storageType] = copyKeys(this, storage);
   }
 
   /**
@@ -516,10 +449,10 @@ var WebStorage = function () {
     value: function setItem(key, value, options) {
       (0, _utils.checkEmpty)(key);
       var storageType = this.__storage__;
-      if (storageType === 'cookieStorage' && bannedKeys.test(key)) {
+      if (storageType === 'cookieStorage' && BANNED_KEYS.test(key)) {
         throw new Error('The key is a reserved word, therefore not allowed');
       }
-      var v = executeInterceptors('setItem', key, value, options);
+      var v = (0, _interceptors2.default)('setItem', key, value, options);
       if (v !== undefined) value = v;
       this[key] = value;
       // prevents converting strings to JSON to avoid extra quotes
@@ -546,13 +479,14 @@ var WebStorage = function () {
       (0, _utils.checkEmpty)(key);
       var value = _proxyMechanism.proxy[this.__storage__].getItem(key);
       if (value == null) {
+        // null or undefined
         delete this[key];
         value = null;
       } else {
-        value = tryParse(value);
+        value = (0, _utils.tryParse)(value);
         this[key] = value;
       }
-      var v = executeInterceptors('getItem', key, value);
+      var v = (0, _interceptors2.default)('getItem', key, value);
       if (v !== undefined) value = v;
       return value;
     }
@@ -571,7 +505,7 @@ var WebStorage = function () {
     key: 'removeItem',
     value: function removeItem(key, options) {
       (0, _utils.checkEmpty)(key);
-      executeInterceptors('removeItem', key, options);
+      (0, _interceptors2.default)('removeItem', key, options);
       delete this[key];
       _proxyMechanism.proxy[this.__storage__].removeItem(key, options);
     }
@@ -589,7 +523,7 @@ var WebStorage = function () {
     value: function clear() {
       var _this = this;
 
-      executeInterceptors('clear');
+      (0, _interceptors2.default)('clear');
       Object.keys(this).forEach(function (key) {
         delete _this[key];
       }, this);
@@ -623,8 +557,8 @@ var WebStorage = function () {
   }], [{
     key: 'interceptors',
     value: function interceptors(command, action) {
-      if (command in _interceptors && typeof action === 'function') {
-        _interceptors[command].push(action);
+      if (command in _interceptors.INTERCEPTORS && typeof action === 'function') {
+        _interceptors.INTERCEPTORS[command].push(action);
       }
     }
   }]);
@@ -651,40 +585,68 @@ exports.proxy = _proxyMechanism.proxy;
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+exports.default = executeInterceptors;
+/**
+ * Stores the interceptors for WebStorage methods.
+ *
+ * @type {object}
+ */
+var INTERCEPTORS = exports.INTERCEPTORS = {
+  setItem: [],
+  getItem: [],
+  removeItem: [],
+  clear: []
+};
+
+/**
+ * Executes the interceptors for a WebStorage method and allows
+ * the transformation in chain of the value passed through.
+ *
+ * @param  {string} command: name of the method to intercept
+ * @return {any}
+ */
+function executeInterceptors(command) {
+  for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+    args[_key - 1] = arguments[_key];
+  }
+
+  var key = args.shift();
+  var value = args.shift();
+  if (value && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') {
+    // clone the object to prevent mutations
+    value = JSON.parse(JSON.stringify(value));
+  }
+  return INTERCEPTORS[command].reduce(function (val, action) {
+    var transformed = action.apply(undefined, [key, val].concat(args));
+    if (transformed == null) return val;
+    return transformed;
+  }, value);
+}
+
+/***/ }),
+/* 5 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
 exports.proxy = undefined;
 
-var _cookieStorage = __webpack_require__(5);
+var _cookieStorage = __webpack_require__(6);
 
 var _cookieStorage2 = _interopRequireDefault(_cookieStorage);
 
-var _memoryStorage = __webpack_require__(6);
+var _memoryStorage = __webpack_require__(9);
 
 var _memoryStorage2 = _interopRequireDefault(_memoryStorage);
 
-var _utils = __webpack_require__(0);
-
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * @private
- *
- * Copy the current items in the storage mechanism.
- *
- * @param  {object} api: the storage mechanism to initialize
- * @return {object}
- */
-function initApi(api) {
-  if (!api.initialize) return api;
-  // sets API members to read-only and non-enumerable
-  for (var prop in api) {
-    // eslint-disable-line
-    if (prop !== 'initialize') {
-      (0, _utils.setProperty)(api, prop);
-    }
-  }
-  api.initialize();
-  return api;
-}
 
 /**
  * @public
@@ -700,12 +662,12 @@ function initApi(api) {
 var proxy = exports.proxy = {
   localStorage: window.localStorage,
   sessionStorage: window.sessionStorage,
-  cookieStorage: initApi((0, _cookieStorage2.default)()),
-  memoryStorage: initApi((0, _memoryStorage2.default)())
+  cookieStorage: (0, _cookieStorage2.default)(),
+  memoryStorage: (0, _memoryStorage2.default)()
 };
 
 /***/ }),
-/* 5 */
+/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -714,9 +676,18 @@ var proxy = exports.proxy = {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.default = cookieStorage;
 
 var _utils = __webpack_require__(0);
+
+var _formatMetadata = __webpack_require__(7);
+
+var _formatMetadata2 = _interopRequireDefault(_formatMetadata);
+
+var _expirationDate = __webpack_require__(8);
+
+var _expirationDate2 = _interopRequireDefault(_expirationDate);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 /**
  * @private
@@ -737,51 +708,6 @@ var $cookie = {
   },
   data: {} // metadata associated to the cookies
 };
-
-/**
- * @private
- *
- * Builds the expiration for the cookie.
- *
- * @see utils.alterDate(options)
- *
- * @param  {Date|object} date: the expiration date
- * @return {string}
- */
-function buildExpirationString(date) {
-  var expires = date instanceof Date ? (0, _utils.alterDate)({ date: date }) : (0, _utils.alterDate)(date);
-  return expires.toUTCString();
-}
-
-/**
- * @private
- *
- * Builds the string for the cookie metadata.
- *
- * @param  {string} key: name of the metadata
- * @param  {object} data: metadata of the cookie
- * @return {string}
- */
-function buildMetadataFor(key, data) {
-  if (!data[key]) return '';
-  return ';' + key + '=' + data[key];
-}
-
-/**
- * @private
- *
- * Builds the whole string for the cookie metadata.
- *
- * @param  {object} data: metadata of the cookie
- * @return {string}
- */
-function formatMetadata(data) {
-  var expires = buildMetadataFor('expires', data);
-  var domain = buildMetadataFor('domain', data);
-  var path = buildMetadataFor('path', data);
-  var secure = data.secure ? ';secure' : '';
-  return '' + expires + domain + path + secure;
-}
 
 /**
  * @private
@@ -813,13 +739,13 @@ function cookieStorage() {
       $cookie.data[key] = { path: options.path };
       var metadata = $cookie.data[key];
       if ((0, _utils.isObject)(options.expires) || options.expires instanceof Date) {
-        metadata.expires = buildExpirationString(options.expires);
+        metadata.expires = (0, _expirationDate2.default)(options.expires);
       }
       if (options.domain && typeof options.domain === 'string') {
         metadata.domain = options.domain.trim();
       }
       if (options.secure === true) metadata.secure = true;
-      var cookie = key + '=' + encodeURIComponent(value) + formatMetadata(metadata);
+      var cookie = key + '=' + encodeURIComponent(value) + (0, _formatMetadata2.default)(metadata);
       // TODO: should encodeURIComponent(key) ?
       $cookie.set(cookie);
     },
@@ -843,7 +769,7 @@ function cookieStorage() {
     },
     clear: function clear() {
       var key = void 0,
-          indexEQ = void 0; // eslint-disable-line
+          indexEQ = void 0;
       $cookie.get().split(';').forEach(function (cookie) {
         indexEQ = cookie.indexOf('=');
         if (indexEQ > -1) {
@@ -852,25 +778,132 @@ function cookieStorage() {
           api.removeItem(key.trim());
         }
       });
-    },
-    initialize: function initialize() {
-      // copies all existing elements in the storage
-      $cookie.get().split(';').forEach(function (cookie) {
-        var index = cookie.indexOf('=');
-        var key = cookie.substring(0, index).trim();
-        var value = cookie.substring(index + 1).trim();
-        if (key) api[key] = decodeURIComponent(value);
-      });
-      // this method is removed after being invoked
-      // because is not part of the Web Storage interface
-      delete api.initialize;
     }
   };
+
+  return initialize(api);
+}
+
+/**
+ * @private
+ *
+ * Copy the current items in the cookie storage.
+ *
+ * @param  {object} api: the storage mechanism to initialize
+ * @return {object}
+ */
+function initialize(api) {
+  // sets API members to read-only and non-enumerable
+  for (var prop in api) {
+    // eslint-disable-line
+    (0, _utils.setProperty)(api, prop);
+  }
+  // copies all existing elements in the storage
+  $cookie.get().split(';').forEach(function (cookie) {
+    var index = cookie.indexOf('=');
+    var key = cookie.substring(0, index).trim();
+    var value = cookie.substring(index + 1).trim();
+    if (key) api[key] = decodeURIComponent(value);
+  });
   return api;
 }
 
+/**
+ * @public API
+ */
+exports.default = cookieStorage;
+
 /***/ }),
-/* 6 */
+/* 7 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = formatMetadata;
+/**
+ * @private
+ *
+ * Builds the string for the cookie metadata.
+ *
+ * @param  {string} key: name of the metadata
+ * @param  {object} data: metadata of the cookie
+ * @return {string}
+ */
+function buildMetadataFor(key, data) {
+  if (!data[key]) return '';
+  return ';' + key + '=' + data[key];
+}
+
+/**
+ * Builds the whole string for the cookie metadata.
+ *
+ * @param  {object} data: metadata of the cookie
+ * @return {string}
+ */
+function formatMetadata(data) {
+  var expires = buildMetadataFor('expires', data);
+  var domain = buildMetadataFor('domain', data);
+  var path = buildMetadataFor('path', data);
+  var secure = data.secure ? ';secure' : '';
+  return '' + expires + domain + path + secure;
+}
+
+/***/ }),
+/* 8 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = buildExpiration;
+/**
+ * @private
+ *
+ * Adds or subtracts date portions to the given date and returns the new date.
+ * @see https://gist.github.com/jherax/bbc43e479a492cc9cbfc7ccc20c53cd2
+ *
+ * @param  {object} options: It contains the date parts to add or remove, and can have the following properties:
+ *         - {Date} date: if provided, this date will be affected, otherwise the current date will be used.
+ *         - {number} minutes: minutes to add/subtract
+ *         - {number} hours: hours to add/subtract
+ *         - {number} days: days to add/subtract
+ *         - {number} months: months to add/subtract
+ *         - {number} years: years to add/subtract
+ * @return {Date}
+ */
+function alterDate() {
+  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  var opt = Object.assign({}, options);
+  var d = opt.date instanceof Date ? opt.date : new Date();
+  if (+opt.minutes) d.setMinutes(d.getMinutes() + opt.minutes);
+  if (+opt.hours) d.setHours(d.getHours() + opt.hours);
+  if (+opt.days) d.setDate(d.getDate() + opt.days);
+  if (+opt.months) d.setMonth(d.getMonth() + opt.months);
+  if (+opt.years) d.setFullYear(d.getFullYear() + opt.years);
+  return d;
+}
+
+/**
+ * Builds the expiration for the cookie.
+ *
+ * @param  {Date|object} date: the expiration date
+ * @return {string}
+ */
+function buildExpiration(date) {
+  var expires = date instanceof Date ? alterDate({ date: date }) : alterDate(date);
+  return expires.toUTCString();
+}
+
+/***/ }),
+/* 9 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
@@ -883,6 +916,9 @@ Object.defineProperty(exports, "__esModule", {
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
 exports.default = memoryStorage;
+
+var _utils = __webpack_require__(0);
+
 /**
  * @private
  *
@@ -891,13 +927,14 @@ exports.default = memoryStorage;
  * @return {object}
  */
 function getStoreFromWindow() {
-  // eslint-disable-line
+  var store = void 0;
   try {
-    var store = JSON.parse(window.self.name);
-    if (store && (typeof store === 'undefined' ? 'undefined' : _typeof(store)) === 'object') return store;
+    store = JSON.parse(window.self.name);
   } catch (e) {
     return {};
   }
+  if (store && (typeof store === 'undefined' ? 'undefined' : _typeof(store)) === 'object') return store;
+  return {};
 }
 
 /**
@@ -942,15 +979,29 @@ function memoryStorage() {
         return delete hashtable[key];
       });
       setStoreToWindow(hashtable);
-    },
-    initialize: function initialize() {
-      // copies all existing elements in the storage
-      Object.assign(api, hashtable);
-      // this method is removed after being invoked
-      // because is not part of the Web Storage interface
-      delete api.initialize;
     }
   };
+
+  return initialize(api, hashtable);
+}
+
+/**
+ * @private
+ *
+ * Copy the current items in the cookie storage.
+ *
+ * @param  {object} api: the storage mechanism to initialize
+ * @param  {object} hashtable: store from the window tab
+ * @return {object}
+ */
+function initialize(api, hashtable) {
+  // sets API members to read-only and non-enumerable
+  for (var prop in api) {
+    // eslint-disable-line
+    (0, _utils.setProperty)(api, prop);
+  }
+  // copies all existing elements in the storage
+  Object.assign(api, hashtable);
   return api;
 }
 
