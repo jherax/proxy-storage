@@ -76,7 +76,7 @@ var cookieStore = new proxyStorage.WebStorage('cookieStorage');
 ```
 
 As `proxy-storage` is built as [UMD] _(Universal Module Definition)_,
-it can be included from module loaders such as [CommonJS], [ES2015 Export]
+it can be included from module loaders such as [CommonJS], [ES2015 Imports]
 or [AMD RequireJS].
 
 ### CommonJS
@@ -90,7 +90,7 @@ var WebStorage = require('proxy-storage').WebStorage;
 var cookieStore = new WebStorage('cookieStorage');
 ```
 
-### ES2015 Export
+### ES2015 Imports
 
 ```javascript
 // gets the default storage mechanism (usually localStorage)
@@ -673,5 +673,5 @@ repository. See [LICENSE](LICENSE) file for more information.
 [window.sessionStorage]: https://developer.mozilla.org/en-US/docs/Web/API/Window/sessionStorage
 [UMD]: http://davidbcalhoun.com/2014/what-is-amd-commonjs-and-umd/
 [CommonJS]: https://blog.risingstack.com/node-js-at-scale-module-system-commonjs-require/
-[ES2015 Export]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/export
+[ES2015 Imports]: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/import
 [AMD RequireJS]: http://requirejs.org/docs/api.html#jsfiles
