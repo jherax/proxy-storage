@@ -75,6 +75,9 @@ function cookieStorage() {
       return value;
     },
 
+    // TODO: Add the method getAll() to get all cookies
+    // https://github.com/jherax/proxy-storage/issues/6
+
     removeItem(key, options) {
       const metadata = Object.assign({}, $cookie.data[key], options);
       metadata.expires = {days: -1};

@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.3.0. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.3.1. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -761,6 +761,11 @@ function cookieStorage() {
       if (value === null) delete $cookie.data[key];
       return value;
     },
+
+
+    // TODO: Add the method getAll() to get all cookies
+    // https://github.com/jherax/proxy-storage/issues/6
+
     removeItem: function removeItem(key, options) {
       var metadata = Object.assign({}, $cookie.data[key], options);
       metadata.expires = { days: -1 };
