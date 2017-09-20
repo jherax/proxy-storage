@@ -59,7 +59,7 @@ $ yarn add proxy-storage
 <script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.3.0/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.3.2/dist/proxy-storage.min.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -153,7 +153,8 @@ the prototype:
 - **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.
   <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
-- **`getItem`**`(key)`: retrieves a value by its `key` name.
+- **`getItem`**`(key [, noParse])`: retrieves a value by its `key` name.
+  <br>If `noParse` is `true` then the value retrieved is not parsed with `JSON.parse`.
 - **`removeItem`**`(key [,options])`: deletes an item from the storage.
   <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
@@ -189,6 +190,9 @@ import storage from 'proxy-storage';
 storage.setItem('qwerty', [{ garbage: true, some: 'object' }]);
 console.log(storage.getItem('qwerty'));
 // [{ garbage: true, some: 'object' }]
+
+console.log(storage.getItem('qwerty', true));
+// '[{ "garbage": true, "some": "object" }]'
 
 storage.setItem('persisted', true);
 storage.setItem('o-really', { status: 'saved' });
@@ -237,7 +241,8 @@ Each instance inherits the following properties:
 - **`setItem`**`(key, value [,options])`: stores a `value` given a `key` name.
   <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).
-- **`getItem`**`(key)`: retrieves a value by its `key` name.
+- **`getItem`**`(key [, noParse])`: retrieves a value by its `key` name.
+  <br>If `noParse` is `true` then the value retrieved is not parsed with `JSON.parse`.
 - **`removeItem`**`(key [,options])`: deletes an item from the storage.
   <br>The `options` parameter is used only with instances of `cookieStorage`.
   Read more details [here](#handling-cookies).

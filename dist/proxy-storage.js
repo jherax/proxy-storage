@@ -1,4 +1,4 @@
-/*! proxyStorage@v2.3.1. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
+/*! proxyStorage@v2.3.2. Jherax 2017. Visit https://github.com/jherax/proxy-storage */
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
@@ -468,6 +468,7 @@ var WebStorage = function () {
      * Retrieves a value by its key name.
      *
      * @param  {string} key: keyname of the storage
+     * @param  {boolean} noParse: if the value shoudn't be parsed with `JSON.parse`
      * @return {void}
      *
      * @memberOf WebStorage
@@ -475,7 +476,7 @@ var WebStorage = function () {
 
   }, {
     key: 'getItem',
-    value: function getItem(key) {
+    value: function getItem(key, noParse) {
       (0, _utils.checkEmpty)(key);
       var value = _proxyMechanism.proxy[this.__storage__].getItem(key);
       if (value == null) {
@@ -483,7 +484,7 @@ var WebStorage = function () {
         delete this[key];
         value = null;
       } else {
-        value = (0, _utils.tryParse)(value);
+        if (noParse !== true) value = (0, _utils.tryParse)(value);
         this[key] = value;
       }
       var v = (0, _interceptors2.default)('getItem', key, value);

@@ -2,6 +2,13 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.3.2
+
+### Improvements
+
+1. Added an optional parameter to `getItem(key, noParse)` method
+   to determine if the value shouldn't be parsed with `JSON.parse`
+
 ## 2.3.0
 
 ### Improvements

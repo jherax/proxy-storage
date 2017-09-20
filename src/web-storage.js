@@ -135,18 +135,19 @@ class WebStorage {
    * Retrieves a value by its key name.
    *
    * @param  {string} key: keyname of the storage
+   * @param  {boolean} noParse: if the value shoudn't be parsed with `JSON.parse`
    * @return {void}
    *
    * @memberOf WebStorage
    */
-  getItem(key) {
+  getItem(key, noParse) {
     checkEmpty(key);
     let value = proxy[this.__storage__].getItem(key);
     if (value == null) { // null or undefined
       delete this[key];
       value = null;
     } else {
-      value = tryParse(value);
+      if (noParse !== true) value = tryParse(value);
       this[key] = value;
     }
     const v = executeInterceptors('getItem', key, value);

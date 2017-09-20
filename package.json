@@ -1,6 +1,6 @@
 {
   "name": "proxy-storage",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "Normalizes the API for cookies, and localStorage/sessionStorage",
   "author": "David Rivera <jherax@gmail.com>",
   "main": "src/proxy-storage.js",
