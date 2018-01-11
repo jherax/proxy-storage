@@ -371,7 +371,7 @@ metadata internally, so that you can call `removeItem(key)` with no more
 arguments. Otherwise you will need to provide the metadata **`path`** or
 **`domain`**:
 
-![cookies](https://www.dropbox.com/s/wlvgm0t8xc07me1/cookies-metadata.gif?dl=1)
+![cookies-metadata](https://assets.healthcare.com/static/docs/img/cookies-metadata.png)
 
 ```javascript
 // change the value of an external cookie in /answers
