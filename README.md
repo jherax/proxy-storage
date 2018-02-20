@@ -7,22 +7,20 @@ This library manages an adapter that implements an interface similar to
 [window.localStorage] and [window.sessionStorage].
 
 One of the advantages of this library is that the adapter stores the data
-as **JSON**, allowing to save `Object` and `Array<Any>` values, which
-is not the default behavior when using the native `window.localStorage`,
-`window.sessionStorage` or `document.cookie` storages.
+as **JSON**, allowing to store and retrieve values of type `Object` and
+`Array<Any>` (not possible when using the native `localStorage`,
+`sessionStorage` or `document.cookie` APIs).
 
-It also provides a new mechanism -- [`memoryStorage`](#storage-or-default),
+It also provides a new mechanism —[`memoryStorage`](#storage-or-default)—,
 that persists the data in memory (for current browser-tab), even if a forced
 refresh is done on the page. It is a mimic of `sessionStorage` and it could
 be used as fallback when the other storage mechanisms are not available, for
-example, some browsers navigating in private mode.
-Read more about [window.sessionStorage].
+example, if the browser is navigating in private mode.
+(Read more about [window.sessionStorage]).
 
 Another advantage with **proxy-storage** is that you can register
-[interceptors](#interceptors) as functions for the prototype methods of
-[WebStorage](#webstorage) class: `setItem`, `getItem`, `removeItem`, and
-`clear`, giving you the ability to intercept and modify the values to read,
-write, or delete.
+[interceptors](#interceptors) as callbacks to intercept and modify the
+values from `setItem`, `getItem`, `removeItem`, and `clear` methods.
 
 ## Content
 
