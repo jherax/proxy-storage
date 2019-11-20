@@ -3,26 +3,13 @@ const {version} = require('../package.json');
 const webpack = require('webpack');
 const PATHS = require('./paths');
 
-const banner = `proxyStorage@v${version}. Jherax 2017. Visit https://github.com/jherax/proxy-storage`;
-const test = /\.min.js($|\?)/i;
-
-/**
- * Should include a version with polyfills?
- *
- * Object.hasOwnProperty
- * Object.defineProperty
- * Object.assign
- * Object.keys
- * Array.forEach
- * Array.reduce
- * Array.find
- * String.trim
- */
+const banner = `proxyStorage@v${version}. Jherax 2019. Visit https://github.com/jherax/proxy-storage`;
+const tsFile = /\.[jt]s($|\?)/i;
 
 const config = {
   entry: {
     'proxy-storage': PATHS.source.js,
-    'proxy-storage.min': PATHS.source.js,
+    'proxy-storage.full': [PATHS.source.polyfill, PATHS.source.js],
   },
   output: {
     path: PATHS.dist.folder,
@@ -59,7 +46,7 @@ const config = {
     }),
     // https://webpack.js.org/plugins/uglifyjs-webpack-plugin/
     new webpack.optimize.UglifyJsPlugin({
-      test,
+      test: tsFile,
       sourceMap: true, // map error message locations to modules
       // https://github.com/mishoo/UglifyJS2#compress-options
       compress: {
@@ -75,7 +62,7 @@ const config = {
     new webpack.BannerPlugin({banner, raw: false, entryOnly: true}),
     // https://webpack.js.org/plugins/source-map-dev-tool-plugin/
     new webpack.SourceMapDevToolPlugin({
-      test,
+      test: tsFile,
       filename: '[name].map',
       // loaders generate SourceMaps and the source code is used
       module: true,

@@ -11,5 +11,6 @@ module.exports = {
   source: {
     folder: source,
     js: resolve(source, 'proxy-storage.js'),
+    polyfill: resolve(source, 'polyfill.ts'),
   },
 };

@@ -54,10 +54,10 @@ $ yarn add proxy-storage
 
 ```html
 <!-- from unpkg.com -->
-<script src="https://unpkg.com/proxy-storage/dist/proxy-storage.min.js"></script>
+<script src="https://unpkg.com/proxy-storage/dist/proxy-storage.js"></script>
 
 <!-- or from rawgit.com -->
-<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.3.2/dist/proxy-storage.min.js"></script>
+<script src="https://cdn.rawgit.com/jherax/proxy-storage/2.4.0/dist/proxy-storage.js"></script>
 ```
 
 In the above case, [`proxyStorage`](#api) is included as a global object
@@ -106,7 +106,7 @@ const cookieStore = new WebStorage('cookieStorage');
 requirejs.config({
   paths: {
     // remove the extension .js
-    'proxy-storage': '<PATH>/proxy-storage.min'
+    'proxy-storage': '<PATH>/proxy-storage'
   }
 });
 require(['proxy-storage'], function(proxyStorage) {

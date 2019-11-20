@@ -2,6 +2,12 @@
 
 <!-- markdownlint-disable MD024 MD033 -->
 
+## 2.4.0
+
+### Improvements
+
+1. Migrated to TypeScript
+
 ## 2.3.2
 
 ### Improvements
